@@ -1,0 +1,360 @@
+{
+  "name": "intent-v1",
+  "purpose": "Fresh questions for preserving user intent, written before any run and kept out of knowledge_base/examples.sql: grouping replacement, addition and removal in follow-ups, paraphrases of appointments, the date column a period describes, individual amounts vs. totals, and missing vs. zero. Fixture scenarios with \"fixture\": \"months\" run on evaluation/fixture_db.py MONTH_ROWS, where invoice and appointment months differ. Split fresh_round1 (i01-i11) was fresh only on its first run (10/11; i11 failed); fixes followed, so its later runs are not held out. Split fresh_round2 (j01-j06) was written after those fixes and is reported from its first run.",
+  "reference_time": "2023-11-15T12:00:00",
+  "scenarios": [
+    {
+      "id": "i01",
+      "split": "fresh_round1",
+      "tags": [
+        "dates",
+        "status"
+      ],
+      "turns": [
+        "How many cancelled appointments did each specialization have in the first half of 2023?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT d.specialization, COUNT(*) FROM appointments AS a JOIN doctors AS d ON a.doctor_id = d.doctor_id WHERE a.status = 'Cancelled' AND a.appointment_date >= '2023-01-01' AND a.appointment_date < '2023-07-01' GROUP BY d.specialization"
+      }
+    },
+    {
+      "id": "i02",
+      "split": "fresh_round1",
+      "tags": [
+        "follow_up",
+        "replace_grouping"
+      ],
+      "turns": [
+        "What is the total billed amount for each doctor?",
+        "Now per specialization instead"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT d.specialization, SUM(b.amount) FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id GROUP BY d.specialization",
+        "resolved_must_include": [
+          [
+            "specialization"
+          ]
+        ],
+        "resolved_must_exclude": [
+          "each doctor",
+          "per doctor"
+        ]
+      }
+    },
+    {
+      "id": "i03",
+      "split": "fresh_round1",
+      "tags": [
+        "follow_up",
+        "add_grouping"
+      ],
+      "turns": [
+        "How many appointments did each hospital branch have in 2023?",
+        "Split that further by appointment status"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT d.hospital_branch, a.status, COUNT(*) FROM appointments AS a JOIN doctors AS d ON a.doctor_id = d.doctor_id WHERE a.appointment_date >= '2023-01-01' AND a.appointment_date < '2024-01-01' GROUP BY d.hospital_branch, a.status",
+        "resolved_must_include": [
+          [
+            "branch"
+          ],
+          [
+            "status"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "i04",
+      "split": "fresh_round1",
+      "tags": [
+        "date_column",
+        "individual_amounts"
+      ],
+      "turns": [
+        "List the bills issued in October 2023 for Completed appointments, with each bill's amount."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT b.bill_id, b.amount FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id WHERE a.status = 'Completed' AND b.bill_date >= '2023-10-01' AND b.bill_date < '2023-11-01'",
+        "sql_must_not_match": [
+          "appointment_date\\s*(>=|<|between)"
+        ]
+      }
+    },
+    {
+      "id": "i05",
+      "split": "fresh_round1",
+      "tags": [
+        "two_dates"
+      ],
+      "turns": [
+        "How many patients registered in 2022 had at least one appointment in 2023?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT COUNT(DISTINCT p.patient_id) FROM patients AS p JOIN appointments AS a ON a.patient_id = p.patient_id WHERE p.registration_date >= '2022-01-01' AND p.registration_date < '2023-01-01' AND a.appointment_date >= '2023-01-01' AND a.appointment_date < '2024-01-01'"
+      }
+    },
+    {
+      "id": "i06",
+      "split": "fresh_round1",
+      "tags": [
+        "follow_up",
+        "remove_grouping"
+      ],
+      "turns": [
+        "What is the average bill amount per payment method and payment status?",
+        "Drop the payment status split"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT payment_method, ROUND(AVG(amount), 2) FROM billing GROUP BY payment_method",
+        "alternative_reference_sqls": [
+          "SELECT payment_method, AVG(amount) FROM billing GROUP BY payment_method"
+        ]
+      }
+    },
+    {
+      "id": "i07",
+      "split": "fresh_round1",
+      "tags": [
+        "paraphrase",
+        "keep_all",
+        "names"
+      ],
+      "turns": [
+        "Show every consultation of Dr. Linda Brown in Q3 2023 with the invoice amounts."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.doctor_id = 'D008' AND a.appointment_date >= '2023-07-01' AND a.appointment_date < '2023-10-01'",
+        "sql_must_match": [
+          "D008"
+        ],
+        "sql_must_not_match": [
+          "FROM\\s+billing",
+          "SUM\\("
+        ]
+      }
+    },
+    {
+      "id": "i08",
+      "split": "fresh_round1",
+      "tags": [
+        "visits",
+        "clarification"
+      ],
+      "turns": [
+        "How many visits did each doctor have in December 2023?",
+        "only the completed ones"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.doctor_id, COUNT(*) FROM appointments AS a WHERE a.status = 'Completed' AND a.appointment_date >= '2023-12-01' AND a.appointment_date < '2024-01-01' GROUP BY a.doctor_id",
+        "resolved_must_include": [
+          [
+            "completed"
+          ],
+          [
+            "december 2023"
+          ]
+        ]
+      },
+      "notes": "Two turns: 'visits' is clarified only if December has appointments that are not Completed; otherwise the first turn already answers and the second is a filter follow-up."
+    },
+    {
+      "id": "i09",
+      "split": "fresh_round1",
+      "fixture": "months",
+      "tags": [
+        "date_column",
+        "fixture"
+      ],
+      "turns": [
+        "Give me the June 2023 appointments that have invoices, with each invoice's amount."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a JOIN treatments AS t ON t.appointment_id = a.appointment_id JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01'"
+      },
+      "notes": "B4a2 belongs to a June appointment but was issued in July: a bill_date filter drops it."
+    },
+    {
+      "id": "i10",
+      "split": "fresh_round1",
+      "fixture": "months",
+      "tags": [
+        "date_column",
+        "fixture"
+      ],
+      "turns": [
+        "Which invoices were issued in June 2023, and for which appointments?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT b.bill_id, t.appointment_id FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id WHERE b.bill_date >= '2023-06-01' AND b.bill_date < '2023-07-01'"
+      },
+      "notes": "B7 belongs to a May appointment: an appointment_date filter drops it; B4a2 (July) must not appear."
+    },
+    {
+      "id": "i11",
+      "split": "fresh_round1",
+      "fixture": "months",
+      "tags": [
+        "totals",
+        "missing_vs_zero",
+        "fixture"
+      ],
+      "turns": [
+        "Total billed per appointment for the June 2023 appointments; leave it empty when nothing was billed."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, SUM(b.amount) FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01' GROUP BY a.appointment_id"
+      },
+      "notes": "A4's total includes its July-issued bill (350); A1 and A2 stay NULL, A3 is 0."
+    },
+    {
+      "id": "j01",
+      "tags": [
+        "billed_patient",
+        "attribute_path"
+      ],
+      "turns": [
+        "What is the total paid amount per insurance provider of the billed patients?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT p.insurance_provider, SUM(b.amount) FROM billing AS b JOIN patients AS p ON b.patient_id = p.patient_id WHERE b.payment_status = 'Paid' GROUP BY p.insurance_provider"
+      },
+      "split": "fresh_round2"
+    },
+    {
+      "id": "j02",
+      "tags": [
+        "follow_up",
+        "replace_grouping",
+        "quarter"
+      ],
+      "turns": [
+        "How many appointments did each doctor have in Q2 2023?",
+        "Make that per reason for visit"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT reason_for_visit, COUNT(*) FROM appointments WHERE appointment_date >= '2023-04-01' AND appointment_date < '2023-07-01' GROUP BY reason_for_visit",
+        "resolved_must_include": [
+          [
+            "reason for visit"
+          ],
+          [
+            "q2 2023",
+            "second quarter of 2023",
+            "april"
+          ]
+        ],
+        "resolved_must_exclude": [
+          "each doctor"
+        ]
+      },
+      "split": "fresh_round2"
+    },
+    {
+      "id": "j03",
+      "tags": [
+        "follow_up",
+        "add_grouping"
+      ],
+      "turns": [
+        "What is the average treatment cost per treatment type?",
+        "and by hospital branch too"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT t.treatment_type, d.hospital_branch, ROUND(AVG(t.cost), 2) FROM treatments AS t JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id GROUP BY t.treatment_type, d.hospital_branch",
+        "alternative_reference_sqls": [
+          "SELECT t.treatment_type, d.hospital_branch, AVG(t.cost) FROM treatments AS t JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id GROUP BY t.treatment_type, d.hospital_branch"
+        ],
+        "resolved_must_include": [
+          [
+            "treatment type"
+          ],
+          [
+            "branch"
+          ]
+        ]
+      },
+      "split": "fresh_round2"
+    },
+    {
+      "id": "j04",
+      "fixture": "months",
+      "tags": [
+        "two_date_columns",
+        "fixture"
+      ],
+      "turns": [
+        "For the appointments in June 2023, how many invoices were issued in July 2023?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT COUNT(*) FROM appointments AS a JOIN treatments AS t ON t.appointment_id = a.appointment_id JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01' AND b.bill_date >= '2023-07-01' AND b.bill_date < '2023-08-01'"
+      },
+      "notes": "Only B4a2: a June appointment billed in July.",
+      "split": "fresh_round2"
+    },
+    {
+      "id": "j05",
+      "fixture": "joins",
+      "tags": [
+        "keep_all",
+        "individual_amounts",
+        "fixture"
+      ],
+      "turns": [
+        "List each appointment with every one of its bill amounts, including appointments that never got a bill."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id"
+      },
+      "split": "fresh_round2"
+    },
+    {
+      "id": "j06",
+      "tags": [
+        "names",
+        "distinct"
+      ],
+      "turns": [
+        "How many distinct patients had appointments with Dr. Sarah Taylor in 2023?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT COUNT(DISTINCT patient_id) FROM appointments WHERE doctor_id = 'D005' AND appointment_date >= '2023-01-01' AND appointment_date < '2024-01-01'"
+      },
+      "split": "fresh_round2"
+    }
+  ]
+}

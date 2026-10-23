@@ -1,0 +1,464 @@
+{
+  "dev_set": "dev-v1",
+  "model": "qwen3.5:4b",
+  "started": "2026-10-22T18:07:00",
+  "settings": {
+    "rag_context_top_k": 5,
+    "num_ctx": 4096,
+    "row_cap": 200,
+    "max_execution_ms": 5000
+  },
+  "items": [
+    {
+      "id": "dev-01",
+      "question": "How many completed appointments does each doctor have, including doctors with zero completed appointments?",
+      "stage": "answered",
+      "elapsed_seconds": 10.28,
+      "llm_seconds": 4.8,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:4",
+        "documentation:appointments",
+        "example:2",
+        "documentation:query-rules",
+        "documentation:doctors"
+      ],
+      "generated_kind": "sql",
+      "generated_sql": "SELECT\n    d.doctor_id,\n    d.first_name,\n    d.last_name,\n    COUNT(a.appointment_id) AS completed_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a\n    ON d.doctor_id = a.doctor_id\n    AND a.status = 'Completed'\nGROUP BY\n    d.doctor_id,\n    d.first_name,\n    d.last_name;",
+      "validation": {
+        "ok": true,
+        "code": null,
+        "reason": null
+      },
+      "error": null,
+      "reference_sql": "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS completed_appointments FROM doctors AS d LEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.status = 'Completed' GROUP BY d.doctor_id, d.first_name, d.last_name",
+      "reference_result": {
+        "columns": [
+          "doctor_id",
+          "first_name",
+          "last_name",
+          "completed_appointments"
+        ],
+        "rows": [
+          [
+            "D001",
+            "David",
+            "Taylor",
+            6
+          ],
+          [
+            "D002",
+            "Jane",
+            "Davis",
+            5
+          ],
+          [
+            "D003",
+            "Jane",
+            "Smith",
+            6
+          ],
+          [
+            "D004",
+            "David",
+            "Jones",
+            3
+          ],
+          [
+            "D005",
+            "Sarah",
+            "Taylor",
+            4
+          ],
+          [
+            "D006",
+            "Alex",
+            "Davis",
+            5
+          ],
+          [
+            "D007",
+            "Robert",
+            "Davis",
+            5
+          ],
+          [
+            "D008",
+            "Linda",
+            "Brown",
+            4
+          ],
+          [
+            "D009",
+            "Sarah",
+            "Smith",
+            3
+          ],
+          [
+            "D010",
+            "Linda",
+            "Wilson",
+            5
+          ]
+        ]
+      },
+      "model_result": {
+        "columns": [
+          "doctor_id",
+          "first_name",
+          "last_name",
+          "completed_appointment_count"
+        ],
+        "rows": [
+          [
+            "D001",
+            "David",
+            "Taylor",
+            6
+          ],
+          [
+            "D002",
+            "Jane",
+            "Davis",
+            5
+          ],
+          [
+            "D003",
+            "Jane",
+            "Smith",
+            6
+          ],
+          [
+            "D004",
+            "David",
+            "Jones",
+            3
+          ],
+          [
+            "D005",
+            "Sarah",
+            "Taylor",
+            4
+          ],
+          [
+            "D006",
+            "Alex",
+            "Davis",
+            5
+          ],
+          [
+            "D007",
+            "Robert",
+            "Davis",
+            5
+          ],
+          [
+            "D008",
+            "Linda",
+            "Brown",
+            4
+          ],
+          [
+            "D009",
+            "Sarah",
+            "Smith",
+            3
+          ],
+          [
+            "D010",
+            "Linda",
+            "Wilson",
+            5
+          ]
+        ],
+        "execution_ms": 1.1
+      },
+      "verdict": "match",
+      "detail": "same rows (order ignored)"
+    },
+    {
+      "id": "dev-02",
+      "question": "What is the total pending bill amount for each payment method?",
+      "stage": "answered",
+      "elapsed_seconds": 5.61,
+      "llm_seconds": 1.44,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "documentation:billing",
+        "example:3",
+        "documentation:query-rules",
+        "documentation:treatments",
+        "documentation:patients"
+      ],
+      "generated_kind": "sql",
+      "generated_sql": "SELECT payment_method, SUM(amount) AS total_pending_amount\nFROM billing\nWHERE payment_status = 'Pending'\nGROUP BY payment_method;",
+      "validation": {
+        "ok": true,
+        "code": null,
+        "reason": null
+      },
+      "error": null,
+      "reference_sql": "SELECT payment_method, SUM(amount) AS total_pending_amount FROM billing WHERE payment_status = 'Pending' GROUP BY payment_method",
+      "reference_result": {
+        "columns": [
+          "payment_method",
+          "total_pending_amount"
+        ],
+        "rows": [
+          [
+            "Insurance",
+            "59206.47"
+          ],
+          [
+            "Credit Card",
+            "76039.45"
+          ],
+          [
+            "Cash",
+            "49366.09"
+          ]
+        ]
+      },
+      "model_result": {
+        "columns": [
+          "payment_method",
+          "total_pending_amount"
+        ],
+        "rows": [
+          [
+            "Insurance",
+            "59206.47"
+          ],
+          [
+            "Credit Card",
+            "76039.45"
+          ],
+          [
+            "Cash",
+            "49366.09"
+          ]
+        ],
+        "execution_ms": 0.7
+      },
+      "verdict": "match",
+      "detail": "same rows (order ignored)"
+    },
+    {
+      "id": "dev-03",
+      "question": "Which treatment types have an average cost greater than 500, ordered from highest average cost to lowest?",
+      "stage": "answered",
+      "elapsed_seconds": 5.86,
+      "llm_seconds": 1.63,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "documentation:treatments",
+        "documentation:query-rules",
+        "example:5",
+        "documentation:billing",
+        "documentation:patients"
+      ],
+      "generated_kind": "sql",
+      "generated_sql": "SELECT treatment_type, AVG(cost) AS avg_cost\nFROM treatments\nGROUP BY treatment_type\nHAVING AVG(cost) > 500\nORDER BY avg_cost DESC;",
+      "validation": {
+        "ok": true,
+        "code": null,
+        "reason": null
+      },
+      "error": null,
+      "reference_sql": "SELECT treatment_type, AVG(cost) AS average_cost FROM treatments GROUP BY treatment_type HAVING AVG(cost) > 500 ORDER BY average_cost DESC",
+      "reference_result": {
+        "columns": [
+          "treatment_type",
+          "average_cost"
+        ],
+        "rows": [
+          [
+            "MRI",
+            "3224.948889"
+          ],
+          [
+            "Physiotherapy",
+            "2761.613889"
+          ],
+          [
+            "X-Ray",
+            "2698.870000"
+          ],
+          [
+            "Chemotherapy",
+            "2629.707755"
+          ],
+          [
+            "ECG",
+            "2532.216842"
+          ]
+        ]
+      },
+      "model_result": {
+        "columns": [
+          "treatment_type",
+          "avg_cost"
+        ],
+        "rows": [
+          [
+            "MRI",
+            "3224.948889"
+          ],
+          [
+            "Physiotherapy",
+            "2761.613889"
+          ],
+          [
+            "X-Ray",
+            "2698.870000"
+          ],
+          [
+            "Chemotherapy",
+            "2629.707755"
+          ],
+          [
+            "ECG",
+            "2532.216842"
+          ]
+        ],
+        "execution_ms": 0.9
+      },
+      "verdict": "match",
+      "detail": "same rows in the same order"
+    },
+    {
+      "id": "dev-04",
+      "question": "How many distinct patients had cancelled appointments?",
+      "stage": "answered",
+      "elapsed_seconds": 8.15,
+      "llm_seconds": 1.53,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:4",
+        "documentation:appointments",
+        "documentation:query-rules",
+        "example:2",
+        "documentation:patients"
+      ],
+      "generated_kind": "sql",
+      "generated_sql": "SELECT COUNT(DISTINCT a.patient_id) AS cancelled_patient_count\nFROM appointments AS a\nWHERE a.status = 'Cancelled';",
+      "validation": {
+        "ok": true,
+        "code": null,
+        "reason": null
+      },
+      "error": null,
+      "reference_sql": "SELECT COUNT(DISTINCT patient_id) AS patients_with_cancelled_appointments FROM appointments WHERE status = 'Cancelled'",
+      "reference_result": {
+        "columns": [
+          "patients_with_cancelled_appointments"
+        ],
+        "rows": [
+          [
+            36
+          ]
+        ]
+      },
+      "model_result": {
+        "columns": [
+          "cancelled_patient_count"
+        ],
+        "rows": [
+          [
+            36
+          ]
+        ],
+        "execution_ms": 0.5
+      },
+      "verdict": "match",
+      "detail": "same rows (order ignored)"
+    },
+    {
+      "id": "dev-05",
+      "question": "Which hospital branches have more than two doctors?",
+      "stage": "answered",
+      "elapsed_seconds": 5.55,
+      "llm_seconds": 1.37,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:4",
+        "documentation:doctors",
+        "documentation:appointments",
+        "documentation:database-overview",
+        "documentation:query-rules"
+      ],
+      "generated_kind": "sql",
+      "generated_sql": "SELECT hospital_branch, COUNT(*) AS doctor_count\nFROM doctors\nGROUP BY hospital_branch\nHAVING COUNT(*) > 2;",
+      "validation": {
+        "ok": true,
+        "code": null,
+        "reason": null
+      },
+      "error": null,
+      "reference_sql": "SELECT hospital_branch, COUNT(*) AS doctor_count FROM doctors GROUP BY hospital_branch HAVING COUNT(*) > 2",
+      "reference_result": {
+        "columns": [
+          "hospital_branch",
+          "doctor_count"
+        ],
+        "rows": [
+          [
+            "Westside Clinic",
+            3
+          ],
+          [
+            "Eastside Clinic",
+            3
+          ],
+          [
+            "Central Hospital",
+            4
+          ]
+        ]
+      },
+      "model_result": {
+        "columns": [
+          "hospital_branch",
+          "doctor_count"
+        ],
+        "rows": [
+          [
+            "Westside Clinic",
+            3
+          ],
+          [
+            "Eastside Clinic",
+            3
+          ],
+          [
+            "Central Hospital",
+            4
+          ]
+        ],
+        "execution_ms": 0.6
+      },
+      "verdict": "match",
+      "detail": "same rows (order ignored)"
+    }
+  ]
+}

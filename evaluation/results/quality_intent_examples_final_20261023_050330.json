@@ -1,0 +1,807 @@
+{
+  "set": "examples-integration-v1",
+  "label": "intent_examples_final",
+  "split": "all",
+  "model": "qwen3.5:4b",
+  "reference_time": "2023-11-15T12:00:00+03:00",
+  "started": "2026-10-23T05:02:39",
+  "settings": {
+    "rag_context_top_k": 5,
+    "num_ctx": 4096,
+    "num_predict": 512
+  },
+  "items": [
+    {
+      "id": "x01",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "keep_all",
+        "names"
+      ],
+      "turns": [
+        {
+          "message": "all appointments with Dr. David Taylor for this month, including the patient's name, the invoice amount, and the hospital branch.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What are the invoice amounts and hospital branches for all appointments with Dr. David Taylor in November 2023, including the patient's name?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.appointment_date,\n       CONCAT(p.first_name, ' ', p.last_name) AS patient_name,\n       d.hospital_branch, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.doctor_id = 'D001'\n  AND a.appointment_date >= '2023-11-01'\n  AND a.appointment_date < '2023-12-01'\nORDER BY a.appointment_date, a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 5.67
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 5.67,
+      "scenario_seconds": 5.67,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "sql_ok": true,
+      "sql_problems": [],
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, invoice_amount]; model returned 5 columns",
+      "model_rows": [
+        [
+          "A083",
+          "2023-11-07",
+          "Laura Wilson",
+          "Westside Clinic",
+          "4960.65"
+        ],
+        [
+          "A022",
+          "2023-11-14",
+          "David Wilson",
+          "Westside Clinic",
+          "1900.88"
+        ],
+        [
+          "A167",
+          "2023-11-15",
+          "David Wilson",
+          "Westside Clinic",
+          "1871.06"
+        ]
+      ]
+    },
+    {
+      "id": "x02",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "date_column"
+      ],
+      "turns": [
+        {
+          "message": "List only the appointments in November 2023 that have an invoice, with the invoice amount.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "List only the appointments in November 2023 that have an invoice, with the invoice amount.",
+          "reply": "Answered with a read-only query (17 rows). The first query failed and was corrected once; see sql_attempts.",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.appointment_date, b.amount\nFROM appointments AS a\nJOIN treatments AS t ON t.appointment_id = a.appointment_id\nJOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.appointment_date >= '2023-11-01'\n  AND a.appointment_date < '2023-12-01'\n  AND b.bill_date >= '2023-11-01'\n  AND b.bill_date < '2023-12-01'\nORDER BY a.appointment_id, b.bill_id;",
+            "SELECT a.appointment_id, a.appointment_date, b.amount\nFROM appointments AS a\nJOIN treatments AS t ON t.appointment_id = a.appointment_id\nJOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.appointment_date >= '2023-11-01'\n  AND a.appointment_date < '2023-12-01'\nORDER BY a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 6.32
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 6.32,
+      "scenario_seconds": 6.32,
+      "routing_ok": true,
+      "sql_ok": true,
+      "sql_problems": [],
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, amount]; model returned 3 columns",
+      "model_rows": [
+        [
+          "A011",
+          "2023-11-12",
+          "4671.66"
+        ],
+        [
+          "A018",
+          "2023-11-14",
+          "1781.93"
+        ],
+        [
+          "A022",
+          "2023-11-14",
+          "1900.88"
+        ],
+        [
+          "A027",
+          "2023-11-14",
+          "1048.49"
+        ],
+        [
+          "A032",
+          "2023-11-06",
+          "3690.71"
+        ],
+        [
+          "A060",
+          "2023-11-22",
+          "3307.37"
+        ],
+        [
+          "A076",
+          "2023-11-27",
+          "4945.03"
+        ],
+        [
+          "A083",
+          "2023-11-07",
+          "4960.65"
+        ],
+        [
+          "A113",
+          "2023-11-24",
+          "770.64"
+        ],
+        [
+          "A126",
+          "2023-11-02",
+          "4672.30"
+        ],
+        [
+          "A127",
+          "2023-11-13",
+          "1555.89"
+        ],
+        [
+          "A142",
+          "2023-11-01",
+          "662.72"
+        ],
+        [
+          "A145",
+          "2023-11-11",
+          "2120.61"
+        ],
+        [
+          "A147",
+          "2023-11-13",
+          "4716.31"
+        ],
+        [
+          "A156",
+          "2023-11-22",
+          "4964.71"
+        ],
+        [
+          "A167",
+          "2023-11-15",
+          "1871.06"
+        ],
+        [
+          "A190",
+          "2023-11-16",
+          "4834.02"
+        ]
+      ]
+    },
+    {
+      "id": "n01",
+      "split": "new",
+      "tags": [
+        "keep_all",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "Give me every appointment from June 2023 together with the amount of each of its bills; appointments that were never billed must still be listed.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Give me every appointment from June 2023 together with the amount of each of its bills; appointments that were never billed must still be listed.",
+          "reply": "Answered with a read-only query (10 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, b.amount\nFROM appointments AS a\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01'\nORDER BY a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 3.94
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.94,
+      "scenario_seconds": 3.94,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "A1",
+          null
+        ],
+        [
+          "A2",
+          null
+        ],
+        [
+          "A3",
+          0
+        ],
+        [
+          "A4",
+          200
+        ],
+        [
+          "A4",
+          100
+        ],
+        [
+          "A4",
+          50
+        ],
+        [
+          "A5",
+          100
+        ],
+        [
+          "A5",
+          100
+        ],
+        [
+          "A6",
+          null
+        ],
+        [
+          "A6",
+          70
+        ]
+      ]
+    },
+    {
+      "id": "n02",
+      "split": "regression",
+      "tags": [
+        "keep_all",
+        "fixture",
+        "wording"
+      ],
+      "turns": [
+        {
+          "message": "Show the June 2023 visits with their bill amounts, including visits nobody was billed for.",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show the June 2023 visits with their bill amounts, including visits nobody was billed for.",
+          "reply": "\"Visits\" is not a status in the data. In the requested period and people, 2 appointment(s) are Scheduled, Cancelled or No-show. Should I count only Completed appointments, or all appointments of any status?",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.26
+        },
+        {
+          "message": "All of them, any status",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show the June 2023 appointments with their bill amounts, including appointments nobody was billed for (appointments of any status)?",
+          "reply": "Answered with a read-only query (10 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.appointment_date, b.amount\nFROM appointments AS a\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01'\nORDER BY a.appointment_id, b.amount;"
+          ],
+          "elapsed_seconds": 3.8
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.8,
+      "scenario_seconds": 5.06,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, amount]; model returned 3 columns",
+      "model_rows": [
+        [
+          "A1",
+          "2023-06-01",
+          null
+        ],
+        [
+          "A2",
+          "2023-06-02",
+          null
+        ],
+        [
+          "A3",
+          "2023-06-03",
+          0
+        ],
+        [
+          "A4",
+          "2023-06-04",
+          50
+        ],
+        [
+          "A4",
+          "2023-06-04",
+          100
+        ],
+        [
+          "A4",
+          "2023-06-04",
+          200
+        ],
+        [
+          "A5",
+          "2023-06-05",
+          100
+        ],
+        [
+          "A5",
+          "2023-06-05",
+          100
+        ],
+        [
+          "A6",
+          "2023-06-06",
+          null
+        ],
+        [
+          "A6",
+          "2023-06-06",
+          70
+        ]
+      ]
+    },
+    {
+      "id": "n03",
+      "split": "new",
+      "tags": [
+        "only_matching",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "Only invoiced appointments please: one row per invoice with the appointment ID and the amount.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show one row per invoice with the appointment ID and the amount for only invoiced appointments.",
+          "reply": "Answered with a read-only query (7 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN treatments AS t ON t.appointment_id = a.appointment_id\nJOIN billing AS b ON b.treatment_id = t.treatment_id\nORDER BY a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 3.17
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.17,
+      "scenario_seconds": 3.17,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "A3",
+          0
+        ],
+        [
+          "A4",
+          200
+        ],
+        [
+          "A4",
+          100
+        ],
+        [
+          "A4",
+          50
+        ],
+        [
+          "A5",
+          100
+        ],
+        [
+          "A5",
+          100
+        ],
+        [
+          "A6",
+          70
+        ]
+      ]
+    },
+    {
+      "id": "n04",
+      "split": "new",
+      "tags": [
+        "one_to_many",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "For each appointment, how many different treatments and how many bills are recorded? Show appointments with none as zero.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "For each appointment, how many different treatments and how many bills are recorded? Show appointments with none as zero.",
+          "reply": "Answered with a read-only query (6 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, COUNT(DISTINCT t.treatment_id) AS treatment_count, COUNT(b.bill_id) AS bill_count\nFROM appointments a\nLEFT JOIN treatments t ON a.appointment_id = t.appointment_id\nLEFT JOIN billing b ON t.treatment_id = b.treatment_id\nGROUP BY a.appointment_id;"
+          ],
+          "elapsed_seconds": 3.39
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.39,
+      "scenario_seconds": 3.39,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "A1",
+          0,
+          0
+        ],
+        [
+          "A2",
+          1,
+          0
+        ],
+        [
+          "A3",
+          1,
+          1
+        ],
+        [
+          "A4",
+          2,
+          3
+        ],
+        [
+          "A5",
+          2,
+          2
+        ],
+        [
+          "A6",
+          2,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "n05",
+      "split": "new",
+      "tags": [
+        "zero_fill",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "What is the total billed per appointment, writing 0 where an appointment has no bills?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the total billed per appointment, writing 0 where an appointment has no bills?",
+          "reply": "Answered with a read-only query (6 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.appointment_date, COALESCE(SUM(b.amount), 0) AS total_billed\nFROM appointments AS a\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nGROUP BY a.appointment_id, a.appointment_date\nORDER BY a.appointment_id;"
+          ],
+          "elapsed_seconds": 3.54
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.54,
+      "scenario_seconds": 3.54,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, total_billed]; model returned 3 columns",
+      "model_rows": [
+        [
+          "A1",
+          "2023-06-01",
+          0
+        ],
+        [
+          "A2",
+          "2023-06-02",
+          0
+        ],
+        [
+          "A3",
+          "2023-06-03",
+          0
+        ],
+        [
+          "A4",
+          "2023-06-04",
+          350
+        ],
+        [
+          "A5",
+          "2023-06-05",
+          200
+        ],
+        [
+          "A6",
+          "2023-06-06",
+          70
+        ]
+      ]
+    },
+    {
+      "id": "n06",
+      "split": "new",
+      "tags": [
+        "one_to_many",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "What is each doctor's total treatment cost?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is each doctor's total treatment cost?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.doctor_id, d.first_name, d.last_name, SUM(t.cost) AS total_treatment_cost\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 3.42
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.42,
+      "scenario_seconds": 3.42,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [doctor_id, total_treatment_cost]; model returned 4 columns",
+      "model_rows": [
+        [
+          "D1",
+          "Hana",
+          "Ito",
+          400
+        ],
+        [
+          "D2",
+          "Hana",
+          "Berg",
+          350
+        ],
+        [
+          "D3",
+          "Leo",
+          "Marsh",
+          null
+        ]
+      ]
+    },
+    {
+      "id": "n07",
+      "split": "new",
+      "tags": [
+        "missing_invoice",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "Does appointment A2 have an invoice? Show the appointment with its invoice amount.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Does appointment A2 have an invoice? Show the appointment with its invoice amount.",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, b.amount\nFROM appointments a\nLEFT JOIN treatments t ON a.appointment_id = t.appointment_id\nLEFT JOIN billing b ON t.treatment_id = b.treatment_id\nWHERE a.appointment_id = 'A2';"
+          ],
+          "elapsed_seconds": 3.04
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.04,
+      "scenario_seconds": 3.04,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "A2",
+          null
+        ]
+      ]
+    },
+    {
+      "id": "n08",
+      "split": "new",
+      "tags": [
+        "billing_first",
+        "status"
+      ],
+      "turns": [
+        {
+          "message": "How much was billed in total for Completed appointments at each branch?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How much was billed in total for completed appointments at each branch?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.hospital_branch, SUM(b.amount) AS total_billed\nFROM doctors AS d\nJOIN appointments AS a ON a.doctor_id = d.doctor_id\nJOIN treatments AS t ON t.appointment_id = a.appointment_id\nJOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.status = 'Completed'\nGROUP BY d.hospital_branch\nORDER BY d.hospital_branch;"
+          ],
+          "elapsed_seconds": 3.58
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.58,
+      "scenario_seconds": 3.58,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Central Hospital",
+          "40257.32"
+        ],
+        [
+          "Eastside Clinic",
+          "35861.43"
+        ],
+        [
+          "Westside Clinic",
+          "47981.71"
+        ]
+      ]
+    },
+    {
+      "id": "n09",
+      "split": "new",
+      "tags": [
+        "distinct",
+        "issue_date"
+      ],
+      "turns": [
+        {
+          "message": "Per payment method, how many different patients had bills issued in the second half of 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Per payment method, how many different patients had bills issued in the second half of 2023?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT payment_method, COUNT(DISTINCT patient_id) AS patient_count\nFROM billing\nWHERE bill_date >= '2023-07-01' AND bill_date < '2024-01-01'\nGROUP BY payment_method\nORDER BY payment_method;"
+          ],
+          "elapsed_seconds": 3.34
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.34,
+      "scenario_seconds": 3.34,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Cash",
+          16
+        ],
+        [
+          "Credit Card",
+          25
+        ],
+        [
+          "Insurance",
+          19
+        ]
+      ]
+    },
+    {
+      "id": "n10",
+      "split": "new",
+      "tags": [
+        "keep_all",
+        "names"
+      ],
+      "turns": [
+        {
+          "message": "List all appointments of Dr. Sarah Smith in June 2023 with the patient name and the invoice amount.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "List all appointments of Dr. Sarah Smith in June 2023 with the patient name and the invoice amount.",
+          "reply": "Answered with a read-only query (2 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.appointment_date,\n       CONCAT(p.first_name, ' ', p.last_name) AS patient_name, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.doctor_id = 'D009'\n  AND a.appointment_date >= '2023-06-01'\n  AND a.appointment_date < '2023-07-01'\nORDER BY a.appointment_date, a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 5.34
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 5.34,
+      "scenario_seconds": 5.34,
+      "routing_ok": true,
+      "sql_ok": true,
+      "sql_problems": [],
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, invoice_amount]; model returned 4 columns",
+      "model_rows": [
+        [
+          "A090",
+          "2023-06-01",
+          "John Taylor",
+          "885.46"
+        ],
+        [
+          "A062",
+          "2023-06-14",
+          "Laura Davis",
+          "3139.74"
+        ]
+      ]
+    },
+    {
+      "id": "n11",
+      "split": "new",
+      "tags": [
+        "payment_date"
+      ],
+      "turns": [
+        {
+          "message": "Show the invoices that were paid in October 2023.",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show the invoices that were paid in October 2023.",
+          "reply": "The data does not record when a bill was paid: billing has bill_date, the date the bill was issued, and the current payment status. Should I use bill_date instead?",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.15
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.15,
+      "scenario_seconds": 1.15,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    }
+  ],
+  "date_given_to_model": true,
+  "summary": {
+    "new": {
+      "routing_ok": "10/10",
+      "resolved_ok": "n/a",
+      "result_ok": "9/9",
+      "sql_ok": "1/1",
+      "reply_ok": "1/1",
+      "presentation_ok": "n/a",
+      "median_scored_seconds": 3.42
+    },
+    "regression": {
+      "routing_ok": "3/3",
+      "resolved_ok": "1/1",
+      "result_ok": "3/3",
+      "sql_ok": "2/2",
+      "reply_ok": "n/a",
+      "presentation_ok": "n/a",
+      "median_scored_seconds": 5.67
+    },
+    "all": {
+      "routing_ok": "13/13",
+      "resolved_ok": "1/1",
+      "result_ok": "12/12",
+      "sql_ok": "3/3",
+      "reply_ok": "1/1",
+      "presentation_ok": "n/a",
+      "median_scored_seconds": 3.54
+    }
+  }
+}

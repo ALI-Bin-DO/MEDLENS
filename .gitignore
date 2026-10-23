@@ -1,0 +1,71 @@
+# Secrets: ignore every .env variant, but keep the template
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local vector store (rebuilt by backend/scripts/build_index.py); keep the folder
+storage/qdrant/*
+!storage/qdrant/.gitkeep
+
+# Local request-monitoring database (SQLite, plus its -wal/-shm files)
+storage/monitoring/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Frontend (npm)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+coverage/
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+*.tmp
+tmp/
+
+# Downloaded model weights (Ollama keeps its own models outside the project)
+*.gguf
+*.safetensors
+*.bin
+
+# Local empty clone of the GitHub repository (not part of the project)
+MEDLENS-1/
+
+# Evaluation results: keep only the final report of each milestone and the ones docs cite;
+# intermediate re-runs stay local.
+evaluation/results/*.json
+!evaluation/results/dev_eval_20261022_180736.json
+!evaluation/results/quality_baseline_20261022_220320.json
+!evaluation/results/quality_after_final2_20261022_223142.json
+!evaluation/results/quality_regression_final5_20261023_025145.json
+!evaluation/results/quality_quality_recheck_final_20261023_025329.json
+!evaluation/results/quality_examples250_final_20261023_040910.json
+!evaluation/results/quality_examples250_quality_20261023_041247.json
+!evaluation/results/quality_examples250_regression_final_20261023_041057.json
+!evaluation/results/quality_intent_final_20261023_050237.json
+!evaluation/results/quality_intent_examples_final_20261023_050330.json
+!evaluation/results/quality_intent_quality_final_20261023_050717.json
+!evaluation/results/quality_intent_regression_final_20261023_050522.json
+
+# Local copies of setup scripts with real passwords (see docs/team_setup.md)
+*.local.sql

@@ -1,0 +1,1388 @@
+{
+  "set": "regression-v1",
+  "label": "examples250_regression_final",
+  "split": "all",
+  "model": "qwen3.5:4b",
+  "reference_time": "2024-01-15T12:00:00+03:00",
+  "started": "2026-10-23T04:09:12",
+  "settings": {
+    "rag_context_top_k": 5,
+    "num_ctx": 4096,
+    "num_predict": 512
+  },
+  "items": [
+    {
+      "id": "r01",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "chart_words",
+        "overlap"
+      ],
+      "turns": [
+        {
+          "message": "Create a donut chart for the operational volume of each hospital, based on the number of patients with a bill exceeding 30.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the operational volume of each hospital, based on the number of patients with a bill exceeding 30?",
+          "reply": "Answered with a read-only query (3 rows). A donut isn't offered for this result: it counts distinct values per group, so the same item can appear in several groups and the slices would not add up to a whole. It is shown as vertical bars; horizontal bars also available.",
+          "code": null,
+          "sql": [
+            "SELECT d.hospital_branch, COUNT(DISTINCT b.patient_id) AS operational_volume\nFROM billing AS b\nJOIN treatments AS t ON b.treatment_id = t.treatment_id\nJOIN appointments AS a ON t.appointment_id = a.appointment_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nWHERE b.amount > 30\nGROUP BY d.hospital_branch\nORDER BY d.hospital_branch;"
+          ],
+          "elapsed_seconds": 4.0
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 4.0,
+      "scenario_seconds": 4.0,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": [],
+      "presentation_ok": true,
+      "presentation_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Central Hospital",
+          39
+        ],
+        [
+          "Eastside Clinic",
+          34
+        ],
+        [
+          "Westside Clinic",
+          36
+        ]
+      ]
+    },
+    {
+      "id": "r02",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "chart_words",
+        "undefined_measure"
+      ],
+      "turns": [
+        {
+          "message": "Create a donut chart showing the operating ratio for each hospital, based on revenue.",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the operating ratio for each hospital?",
+          "reply": "\"operating ratio\" is not defined in this data. Which measure do you mean: the share of the total billed amount, the number of appointments or the share of appointments that were completed? You can also describe how to calculate it.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.11
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.11,
+      "scenario_seconds": 1.11,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "r03",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "names"
+      ],
+      "turns": [
+        {
+          "message": "I would like a list of all appointments with Dr. David for this month, including the patient's name, the invoice amount, and the hospital branch.",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What are the patient names, invoice amounts, and hospital branches for all appointments with Dr. David in January 2024?",
+          "reply": "More than one doctor matches \"David\". Which one do you mean: D001 David Taylor (Dermatology, Westside Clinic); D004 David Jones (Pediatrics, Central Hospital)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.46
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.46,
+      "scenario_seconds": 1.46,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "r04",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "names",
+        "context"
+      ],
+      "turns": [
+        {
+          "message": "I would like a list of all appointments with Dr. David for this month, including the patient's name, the invoice amount, and the hospital branch.",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What are the patient names, invoice amounts, and hospital branches for all appointments with Dr. David in January 2024?",
+          "reply": "More than one doctor matches \"David\". Which one do you mean: D001 David Taylor (Dermatology, Westside Clinic); D004 David Jones (Pediatrics, Central Hospital)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.25
+        },
+        {
+          "message": "David",
+          "stage": "needs_clarification",
+          "route": "needs_clarification",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "I still need an answer to continue: More than one doctor matches \"David\". Which one do you mean: D001 David Taylor (Dermatology, Westside Clinic); D004 David Jones (Pediatrics, Central Hospital)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.07
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.07,
+      "scenario_seconds": 2.31,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "r05",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "names",
+        "context",
+        "joins"
+      ],
+      "turns": [
+        {
+          "message": "I would like a list of all appointments with Dr. David for this month, including the patient's name, the invoice amount, and the hospital branch.",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What are the patient names, invoice amounts, and hospital branches for all appointments with Dr. David in January 2024?",
+          "reply": "More than one doctor matches \"David\". Which one do you mean: D001 David Taylor (Dermatology, Westside Clinic); D004 David Jones (Pediatrics, Central Hospital)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.39
+        },
+        {
+          "message": "Jones",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What are the patient names, invoice amounts, and hospital branches for all appointments with Dr. David Jones in January 2024?",
+          "reply": "Answered with a read-only query (0 rows).",
+          "code": null,
+          "sql": [
+            "SELECT CONCAT(p.first_name, ' ', p.last_name) AS patient_name, b.amount AS invoice_amount, d.hospital_branch\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.doctor_id = 'D004'\n  AND a.appointment_date >= '2024-01-01'\n  AND a.appointment_date < '2024-02-01'\nORDER BY a.appointment_date, a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 5.14
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 5.14,
+      "scenario_seconds": 6.53,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "sql_ok": true,
+      "sql_problems": [],
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [patient_name]; model returned 3 columns",
+      "model_rows": []
+    },
+    {
+      "id": "r06",
+      "split": "regression",
+      "tags": [
+        "names",
+        "context",
+        "joins"
+      ],
+      "turns": [
+        {
+          "message": "List the appointments of Dr. David in March 2023 with the patient name and the invoice amount",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "List the appointments of Dr. David in March 2023 with the patient name and the invoice amount",
+          "reply": "More than one doctor matches \"David\". Which one do you mean: D001 David Taylor (Dermatology, Westside Clinic); D004 David Jones (Pediatrics, Central Hospital)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.42
+        },
+        {
+          "message": "Taylor",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "List the appointments of Dr. Taylor in March 2023 with the patient name and the invoice amount",
+          "reply": "Answered with a read-only query (2 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.appointment_date,\n       CONCAT(p.first_name, ' ', p.last_name) AS patient_name, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.doctor_id = 'D001'\n  AND a.appointment_date >= '2023-03-01'\n  AND a.appointment_date < '2023-04-01'\nORDER BY a.appointment_date, a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 5.09
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 5.09,
+      "scenario_seconds": 6.51,
+      "routing_ok": true,
+      "sql_ok": true,
+      "sql_problems": [],
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, patient_name, invoice_amount]; model returned 4 columns",
+      "model_rows": [
+        [
+          "A042",
+          "2023-03-21",
+          "Michael Wilson",
+          "4781.32"
+        ],
+        [
+          "A133",
+          "2023-03-23",
+          "Emily Miller",
+          "4289.15"
+        ]
+      ]
+    },
+    {
+      "id": "r07",
+      "split": "regression",
+      "tags": [
+        "former_heldout",
+        "explicit_month"
+      ],
+      "turns": [
+        {
+          "message": "How many treatments were performed in March 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many treatments were performed in March 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT treatment_id) AS treatment_count\nFROM treatments\nWHERE treatment_date >= '2023-03-01'\n  AND treatment_date < '2023-04-01';"
+          ],
+          "elapsed_seconds": 2.99
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.99,
+      "scenario_seconds": 2.99,
+      "routing_ok": true,
+      "sql_ok": true,
+      "sql_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          19
+        ]
+      ]
+    },
+    {
+      "id": "r08",
+      "split": "regression",
+      "tags": [
+        "former_dev",
+        "year_boundary",
+        "context"
+      ],
+      "turns": [
+        {
+          "message": "How many bills were issued in January 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills were issued in January 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2023-01-01'\n  AND bill_date < '2023-02-01';"
+          ],
+          "elapsed_seconds": 2.93
+        },
+        {
+          "message": "What about the previous month?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills were issued in December 2022?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2022-12-01'\n  AND bill_date < '2023-01-01';"
+          ],
+          "elapsed_seconds": 2.96
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.96,
+      "scenario_seconds": 5.89,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "id": "r09",
+      "split": "regression",
+      "tags": [
+        "former_heldout",
+        "payment_date"
+      ],
+      "turns": [
+        {
+          "message": "How many bills were paid during March 2023?",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills were paid during March 2023?",
+          "reply": "The data does not record when a bill was paid: billing has bill_date, the date the bill was issued, and the current payment status. Should I use bill_date instead?",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.13
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.13,
+      "scenario_seconds": 1.13,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "r10",
+      "split": "regression",
+      "tags": [
+        "former_heldout",
+        "inclusive_range"
+      ],
+      "turns": [
+        {
+          "message": "How many bills were issued from 15 March 2023 to 15 April 2023, including both days?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills were issued from 15 March 2023 to 15 April 2023, including both days?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2023-03-15'\n  AND bill_date < '2023-04-16';"
+          ],
+          "elapsed_seconds": 3.1
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.1,
+      "scenario_seconds": 3.1,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          26
+        ]
+      ]
+    },
+    {
+      "id": "r11",
+      "split": "regression",
+      "tags": [
+        "view_change"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments are there for each reason for visit?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments are there for each reason for visit?",
+          "reply": "Answered with a read-only query (5 rows).",
+          "code": null,
+          "sql": [
+            "SELECT reason_for_visit, COUNT(*) AS appointment_count\nFROM appointments\nGROUP BY reason_for_visit\nORDER BY appointment_count DESC, reason_for_visit;"
+          ],
+          "elapsed_seconds": 2.62
+        },
+        {
+          "message": "Could you show that one as a pie?",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "Here is the previous result's chart as a donut. It reuses the same rows; no new query was run.",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 0.93
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 0.93,
+      "scenario_seconds": 3.55,
+      "routing_ok": true,
+      "presentation_ok": true,
+      "presentation_problems": []
+    },
+    {
+      "id": "r12",
+      "split": "regression",
+      "tags": [
+        "view_change",
+        "overlap"
+      ],
+      "turns": [
+        {
+          "message": "What is the average bill amount for each payment method?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the average bill amount for each payment method?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT payment_method, ROUND(AVG(amount), 2) AS average_bill_amount\nFROM billing\nGROUP BY payment_method\nORDER BY payment_method;"
+          ],
+          "elapsed_seconds": 1.97
+        },
+        {
+          "message": "Turn it into a donut",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "The previous result can't be shown as a donut: the measure is not a count or a total (for example an average, rate, minimum or maximum). It can be shown as vertical bars, horizontal bars.",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 0.94
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 0.94,
+      "scenario_seconds": 2.91,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": [],
+      "presentation_ok": true,
+      "presentation_problems": []
+    },
+    {
+      "id": "r13",
+      "split": "regression",
+      "tags": [
+        "chart_words"
+      ],
+      "turns": [
+        {
+          "message": "Show the number of appointments per status as a donut chart",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments are there for each status?",
+          "reply": "Answered with a read-only query (4 rows).",
+          "code": null,
+          "sql": [
+            "SELECT status, COUNT(*) AS appointment_count\nFROM appointments\nGROUP BY status\nORDER BY status;"
+          ],
+          "elapsed_seconds": 1.77
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 1.77,
+      "scenario_seconds": 1.77,
+      "routing_ok": true,
+      "presentation_ok": true,
+      "presentation_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Scheduled",
+          51
+        ],
+        [
+          "Completed",
+          46
+        ],
+        [
+          "Cancelled",
+          51
+        ],
+        [
+          "No-show",
+          52
+        ]
+      ]
+    },
+    {
+      "id": "r14",
+      "split": "regression",
+      "tags": [
+        "greeting"
+      ],
+      "turns": [
+        {
+          "message": "Hello",
+          "stage": "conversation",
+          "route": "greeting",
+          "route_source": "rules",
+          "resolved_question": null,
+          "reply": "Hello! I'm MedLens. Ask me a question about the hospital data in English, for example: \"How many patients are registered?\"",
+          "code": "greeting",
+          "sql": [],
+          "elapsed_seconds": 0.0
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 0.0,
+      "scenario_seconds": 0.0,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "r15",
+      "split": "regression",
+      "tags": [
+        "capabilities"
+      ],
+      "turns": [
+        {
+          "message": "Which chart types do you support?",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "Every answer includes a table. When a result has one numeric measure per category or per date, MedLens also offers a chart: vertical bars for a few categories with short names; horizontal bars for long category names or many categories; a line for a trend over dates or months, in date order; a pie/donut for up to 5 categories whose counts or totals add up to a meaningful whole (never for averages, rates or groups that overlap). The chart-type buttons above the chart switch between the views that fit the result; switching reuses the same rows and runs no new query. Hover a bar, point or slice to see its exact value.",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 0.9
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 0.9,
+      "scenario_seconds": 0.9,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "r16",
+      "split": "regression",
+      "tags": [
+        "this_month"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments are there this month?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments are there in January 2024?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT appointment_id) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2024-01-01'\n  AND appointment_date < '2024-02-01';"
+          ],
+          "elapsed_seconds": 2.9
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.9,
+      "scenario_seconds": 2.9,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "sql_ok": true,
+      "sql_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "id": "fx01",
+      "split": "fixture",
+      "tags": [
+        "names",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "Show this month's appointments of Dr. Maria with the patient name and the invoice amount",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show this month's appointments of Dr. Maria with the patient name and the invoice amount",
+          "reply": "More than one doctor matches \"Maria\". Which one do you mean: D101 Maria Lopez (Cardiology, North Branch); D102 Maria Chen (Neurology, South Branch)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.28
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.28,
+      "scenario_seconds": 1.28,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "fx02",
+      "split": "fixture",
+      "tags": [
+        "names",
+        "context",
+        "multiple_bills",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "Show this month's appointments of Dr. Maria with the patient name and the invoice amount",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show this month's appointments of Dr. Maria with the patient name and the invoice amount",
+          "reply": "More than one doctor matches \"Maria\". Which one do you mean: D101 Maria Lopez (Cardiology, North Branch); D102 Maria Chen (Neurology, South Branch)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.05
+        },
+        {
+          "message": "Chen",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show this month's appointments of Dr. Maria Chen with the patient name and the invoice amount",
+          "reply": "Answered with a read-only query (2 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.appointment_date,\n       CONCAT(p.first_name, ' ', p.last_name) AS patient_name, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nJOIN treatments AS t ON t.appointment_id = a.appointment_id\nJOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE d.doctor_id = 'D102'\n  AND a.appointment_date >= '2024-01-01'\n  AND a.appointment_date < '2024-02-01'\nORDER BY a.appointment_date, a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 4.98
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 4.98,
+      "scenario_seconds": 6.04,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, invoice_amount]; model returned 4 columns",
+      "model_rows": [
+        [
+          "A303",
+          "2024-01-10",
+          "Lina Brooks",
+          150
+        ],
+        [
+          "A303",
+          "2024-01-10",
+          "Lina Brooks",
+          50
+        ]
+      ]
+    },
+    {
+      "id": "fx03",
+      "split": "fixture",
+      "tags": [
+        "joins",
+        "no_bill",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "List all appointments of Dr. Lopez in January 2024 with the patient name and invoice amount, including appointments without an invoice",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "List all appointments of Dr. Lopez in January 2024 with the patient name and invoice amount, including appointments without an invoice",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.appointment_date, CONCAT(p.first_name, ' ', p.last_name) AS patient_name, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE a.doctor_id = 'D101'\n  AND a.appointment_date >= '2024-01-01'\n  AND a.appointment_date < '2024-02-01'\nORDER BY a.appointment_date, a.appointment_id, b.bill_id;"
+          ],
+          "elapsed_seconds": 5.21
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 5.21,
+      "scenario_seconds": 5.21,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, invoice_amount]; model returned 4 columns",
+      "model_rows": [
+        [
+          "A302",
+          "2024-01-03",
+          "Sam Okafor",
+          null
+        ]
+      ]
+    },
+    {
+      "id": "fx04",
+      "split": "fixture",
+      "tags": [
+        "joins",
+        "no_bill",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "Show all appointments of Dr. Lopez with the invoice amount",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show all appointments of Dr. Lopez with the invoice amount",
+          "reply": "Answered with a read-only query (2 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, a.patient_id, a.doctor_id, a.appointment_date, a.appointment_time, a.reason_for_visit, a.status, b.bill_id, b.amount\nFROM appointments a\nLEFT JOIN treatments t ON a.appointment_id = t.appointment_id\nLEFT JOIN billing b ON t.treatment_id = b.treatment_id\nWHERE a.doctor_id = 'D101';"
+          ],
+          "elapsed_seconds": 3.48
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.48,
+      "scenario_seconds": 3.48,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id, amount]; model returned 9 columns",
+      "model_rows": [
+        [
+          "A301",
+          "P201",
+          "D101",
+          "2023-12-30",
+          "09:00:00",
+          "Checkup",
+          "Completed",
+          "B501",
+          100
+        ],
+        [
+          "A302",
+          "P202",
+          "D101",
+          "2024-01-03",
+          "10:00:00",
+          "Consultation",
+          "Completed",
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "id": "fx05",
+      "split": "fixture",
+      "tags": [
+        "fan_out",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "What is the total billed amount for each doctor?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the total billed amount for each doctor?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.doctor_id, d.first_name, d.last_name, COALESCE(SUM(b.amount), 0) AS total_billed\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 3.78
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.78,
+      "scenario_seconds": 3.78,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [doctor_id, total_billed]; model returned 4 columns",
+      "model_rows": [
+        [
+          "D101",
+          "Maria",
+          "Lopez",
+          100
+        ],
+        [
+          "D102",
+          "Maria",
+          "Chen",
+          260
+        ],
+        [
+          "D103",
+          "Omar",
+          "Haddad",
+          80
+        ]
+      ]
+    },
+    {
+      "id": "fx06",
+      "split": "fixture",
+      "tags": [
+        "year_boundary",
+        "context",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments were there in January 2024?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments were there in January 2024?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT appointment_id) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2024-01-01'\n  AND appointment_date < '2024-02-01';"
+          ],
+          "elapsed_seconds": 2.9
+        },
+        {
+          "message": "And in the month before?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments were there in December 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-12-01'\n  AND appointment_date < '2024-01-01';"
+          ],
+          "elapsed_seconds": 2.86
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.86,
+      "scenario_seconds": 5.76,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "id": "fx07",
+      "split": "fixture",
+      "tags": [
+        "names",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments does Dr. Smith have?",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments does Dr. Smith have?",
+          "reply": "I couldn't find a doctor named \"Smith\" in the data. Please check the name, or give the full name or the doctor ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.15
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.15,
+      "scenario_seconds": 1.15,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "fx08",
+      "split": "fixture",
+      "tags": [
+        "names",
+        "fixture"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments does Doctor Omar Haddad have?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments does Doctor Omar Haddad have?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT a.appointment_id)\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nWHERE d.doctor_id = 'D103'\nGROUP BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 2.96
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.96,
+      "scenario_seconds": 2.96,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "id": "g01",
+      "split": "fresh",
+      "tags": [
+        "chart_words"
+      ],
+      "turns": [
+        {
+          "message": "Draw a bar chart of completed appointments per specialization",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many completed appointments are there per specialization?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.specialization, COUNT(a.appointment_id) AS completed_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a\n    ON a.doctor_id = d.doctor_id\n   AND a.status = 'Completed'\nGROUP BY d.specialization\nORDER BY d.specialization;"
+          ],
+          "elapsed_seconds": 3.08
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.08,
+      "scenario_seconds": 3.08,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Dermatology",
+          14
+        ],
+        [
+          "Oncology",
+          10
+        ],
+        [
+          "Pediatrics",
+          22
+        ]
+      ]
+    },
+    {
+      "id": "g02",
+      "split": "fresh",
+      "tags": [
+        "chart_words"
+      ],
+      "turns": [
+        {
+          "message": "Pie chart of the number of bills by payment method please",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills are there for each payment method?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT payment_method, COUNT(*) AS bill_count\nFROM billing\nGROUP BY payment_method\nORDER BY payment_method;"
+          ],
+          "elapsed_seconds": 1.92
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 1.92,
+      "scenario_seconds": 1.92,
+      "routing_ok": true,
+      "presentation_ok": true,
+      "presentation_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Cash",
+          61
+        ],
+        [
+          "Credit Card",
+          75
+        ],
+        [
+          "Insurance",
+          64
+        ]
+      ]
+    },
+    {
+      "id": "g03",
+      "split": "fresh",
+      "tags": [
+        "undefined_measure"
+      ],
+      "turns": [
+        {
+          "message": "What is the utilization rate of each branch?",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the utilization rate of each branch?",
+          "reply": "\"utilization rate\" is not defined in this data. Which measure do you mean: the share of the total billed amount, the number of appointments or the share of appointments that were completed? You can also describe how to calculate it.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.07
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.07,
+      "scenario_seconds": 1.07,
+      "routing_ok": true
+    },
+    {
+      "id": "g04",
+      "split": "fresh",
+      "tags": [
+        "names"
+      ],
+      "turns": [
+        {
+          "message": "List Dr. Sarah's appointments in July 2023 with the patient name",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "List Dr. Sarah's appointments in July 2023 with the patient name",
+          "reply": "More than one doctor matches \"Sarah\". Which one do you mean: D005 Sarah Taylor (Dermatology, Central Hospital); D009 Sarah Smith (Pediatrics, Central Hospital)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.26
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.26,
+      "scenario_seconds": 1.26,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "g05",
+      "split": "fresh",
+      "tags": [
+        "names",
+        "context"
+      ],
+      "turns": [
+        {
+          "message": "List Dr. Sarah's appointments in July 2023 with the patient name",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "List Dr. Sarah's appointments in July 2023 with the patient name",
+          "reply": "More than one doctor matches \"Sarah\". Which one do you mean: D005 Sarah Taylor (Dermatology, Central Hospital); D009 Sarah Smith (Pediatrics, Central Hospital)? Reply with the full name or the ID.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.09
+        },
+        {
+          "message": "Smith",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "List Dr. Sarah's appointments in July 2023 with the patient name",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT a.appointment_id, p.first_name, p.last_name\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nWHERE a.doctor_id = 'D009'\n  AND a.appointment_date >= '2023-07-01'\n  AND a.appointment_date < '2023-08-01'\nORDER BY a.appointment_id;"
+          ],
+          "elapsed_seconds": 4.08
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 4.08,
+      "scenario_seconds": 5.18,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [appointment_id]; model returned 3 columns",
+      "model_rows": [
+        [
+          "A017",
+          "Robert",
+          "Williams"
+        ],
+        [
+          "A116",
+          "Jane",
+          "Wilson"
+        ],
+        [
+          "A153",
+          "David",
+          "Wilson"
+        ]
+      ]
+    },
+    {
+      "id": "g06",
+      "split": "fresh",
+      "tags": [
+        "names",
+        "quarter"
+      ],
+      "turns": [
+        {
+          "message": "Which patients did Doctor Linda Brown see in Q3 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Which patients did Doctor Linda Brown see in Q3 2023?",
+          "reply": "Answered with a read-only query (6 rows).",
+          "code": null,
+          "sql": [
+            "SELECT DISTINCT p.patient_id, p.first_name, p.last_name\nFROM patients AS p\nJOIN appointments AS a ON a.patient_id = p.patient_id\nWHERE a.doctor_id = 'D008'\n  AND a.appointment_date >= '2023-07-01'\n  AND a.appointment_date < '2023-10-01';"
+          ],
+          "elapsed_seconds": 3.74
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.74,
+      "scenario_seconds": 3.74,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [patient_id]; model returned 3 columns",
+      "model_rows": [
+        [
+          "P045",
+          "Linda",
+          "Miller"
+        ],
+        [
+          "P016",
+          "Michael",
+          "Taylor"
+        ],
+        [
+          "P013",
+          "Laura",
+          "Johnson"
+        ],
+        [
+          "P012",
+          "Laura",
+          "Davis"
+        ],
+        [
+          "P014",
+          "Alex",
+          "Taylor"
+        ],
+        [
+          "P029",
+          "David",
+          "Smith"
+        ]
+      ]
+    },
+    {
+      "id": "g07",
+      "split": "fresh",
+      "tags": [
+        "context",
+        "dates"
+      ],
+      "turns": [
+        {
+          "message": "What was the total billed amount in February 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What was the total billed amount in February 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT SUM(amount) AS total_billed\nFROM billing\nWHERE bill_date >= '2023-02-01'\n  AND bill_date < '2023-03-01';"
+          ],
+          "elapsed_seconds": 2.94
+        },
+        {
+          "message": "And the month before that?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What was the total billed amount in January 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT SUM(amount) AS total_billed\nFROM billing\nWHERE bill_date >= '2023-01-01'\n  AND bill_date < '2023-02-01';"
+          ],
+          "elapsed_seconds": 2.97
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.97,
+      "scenario_seconds": 5.9,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "58701.23"
+        ]
+      ]
+    },
+    {
+      "id": "g08",
+      "split": "fresh",
+      "tags": [
+        "names"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments did Dr. Robert have in 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments did Dr. Robert have in 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT a.appointment_id)\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nWHERE d.doctor_id = 'D007'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01';"
+          ],
+          "elapsed_seconds": 3.73
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.73,
+      "scenario_seconds": 3.73,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          13
+        ]
+      ]
+    },
+    {
+      "id": "g09",
+      "split": "fresh",
+      "tags": [
+        "undefined_measure"
+      ],
+      "turns": [
+        {
+          "message": "Show the revenue by month in 2023",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the revenue for each month in 2023?",
+          "reply": "\"revenue\" is not defined in this data. Which measure do you mean: the total billed amount (all bills) or the total amount of bills marked Paid? You can also describe how to calculate it.",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.17
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.17,
+      "scenario_seconds": 1.17,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "g10",
+      "split": "fresh",
+      "tags": [
+        "payment_date"
+      ],
+      "turns": [
+        {
+          "message": "When did patient P005 pay their bills?",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "When did patient P005 pay their bills?",
+          "reply": "The data does not record when a bill was paid: billing has bill_date, the date the bill was issued, and the current payment status. Should I use bill_date instead?",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.08
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.08,
+      "scenario_seconds": 1.08,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    }
+  ],
+  "date_given_to_model": true,
+  "summary": {
+    "fixture": {
+      "routing_ok": "8/8",
+      "resolved_ok": "1/1",
+      "result_ok": "6/6",
+      "sql_ok": "n/a",
+      "reply_ok": "2/2",
+      "presentation_ok": "n/a",
+      "median_scored_seconds": 3.48
+    },
+    "fresh": {
+      "routing_ok": "10/10",
+      "resolved_ok": "1/1",
+      "result_ok": "6/6",
+      "sql_ok": "n/a",
+      "reply_ok": "3/3",
+      "presentation_ok": "1/1",
+      "median_scored_seconds": 2.97
+    },
+    "regression": {
+      "routing_ok": "16/16",
+      "resolved_ok": "3/3",
+      "result_ok": "8/8",
+      "sql_ok": "4/4",
+      "reply_ok": "8/8",
+      "presentation_ok": "4/4",
+      "median_scored_seconds": 1.77
+    },
+    "all": {
+      "routing_ok": "34/34",
+      "resolved_ok": "5/5",
+      "result_ok": "20/20",
+      "sql_ok": "4/4",
+      "reply_ok": "13/13",
+      "presentation_ok": "5/5",
+      "median_scored_seconds": 2.9
+    }
+  }
+}

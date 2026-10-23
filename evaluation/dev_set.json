@@ -1,0 +1,41 @@
+{
+  "name": "dev-v1",
+  "purpose": "Development set for checking the pipeline on questions that are not copies of knowledge_base/examples.sql. Not a held-out test set: it may influence later prompt or retrieval changes. Never add these questions or queries to knowledge_base/.",
+  "items": [
+    {
+      "id": "dev-01",
+      "question": "How many completed appointments does each doctor have, including doctors with zero completed appointments?",
+      "reference_sql": "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS completed_appointments FROM doctors AS d LEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.status = 'Completed' GROUP BY d.doctor_id, d.first_name, d.last_name",
+      "order_matters": false,
+      "notes": "The status filter must be in the LEFT JOIN's ON clause (or equivalent). Filtering in WHERE turns the LEFT JOIN into an inner join and drops doctors with zero completed appointments."
+    },
+    {
+      "id": "dev-02",
+      "question": "What is the total pending bill amount for each payment method?",
+      "reference_sql": "SELECT payment_method, SUM(amount) AS total_pending_amount FROM billing WHERE payment_status = 'Pending' GROUP BY payment_method",
+      "order_matters": false,
+      "notes": "Payment methods with no pending bills are omitted by this reference; a query that lists them with 0 is also a reasonable reading."
+    },
+    {
+      "id": "dev-03",
+      "question": "Which treatment types have an average cost greater than 500, ordered from highest average cost to lowest?",
+      "reference_sql": "SELECT treatment_type, AVG(cost) AS average_cost FROM treatments GROUP BY treatment_type HAVING AVG(cost) > 500 ORDER BY average_cost DESC",
+      "order_matters": true,
+      "notes": "Average of treatments.cost (not billing.amount). Strictly greater than 500."
+    },
+    {
+      "id": "dev-04",
+      "question": "How many distinct patients had cancelled appointments?",
+      "reference_sql": "SELECT COUNT(DISTINCT patient_id) AS patients_with_cancelled_appointments FROM appointments WHERE status = 'Cancelled'",
+      "order_matters": false,
+      "notes": "Must count distinct patients, not cancelled appointments."
+    },
+    {
+      "id": "dev-05",
+      "question": "Which hospital branches have more than two doctors?",
+      "reference_sql": "SELECT hospital_branch, COUNT(*) AS doctor_count FROM doctors GROUP BY hospital_branch HAVING COUNT(*) > 2",
+      "order_matters": false,
+      "notes": "Strictly more than two (> 2, not >= 2)."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+/* Design tokens from the MedLens Figma "Brand & System" page. */
+:root {
+  --color-primary: #008755;
+  --color-primary-hover: #005e3c;
+  --color-secondary: #005e3c;
+  --color-accent: #9b945f; /* gold: thin rules and small details only */
+  --color-accent-tint: #f5f3ea;
+  --color-canvas: #f6f8f7;
+  --color-surface: #ffffff;
+  --color-ink: #1c2430;
+  --color-muted: #707372;
+  --color-border: #dde3e0;
+  --color-tint: #e6f3ee;
+  --color-question: #eef1ef;
+  --color-danger: #b42318;
+  --color-danger-tint: #fef3f2;
+  --color-danger-border: #f4c7c1;
+  --color-warning-tint: #fbf8ec;
+  --color-warning-border: #e6dfb8;
+  --color-focus: #008755;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
+
+  --text-h1: 32px;
+  --lh-h1: 48px;
+  --text-h2: 24px;
+  --lh-h2: 36px;
+  --text-body: 16px;
+  --lh-body: 24px;
+  --text-ui: 14px;
+  --lh-ui: 21px;
+  --text-meta: 12px;
+  --lh-meta: 18px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --sidebar-width: 280px;
+  --header-height: 64px;
+  --content-width: 880px;
+
+  --motion-page: 200ms;
+  --motion-panel: 240ms;
+  --shadow-card: 0 1px 2px rgba(28, 36, 48, 0.06);
+}

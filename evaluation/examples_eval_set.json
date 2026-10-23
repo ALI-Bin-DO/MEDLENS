@@ -1,0 +1,278 @@
+{
+  "name": "examples-integration-v1",
+  "purpose": "Checks after integrating the 250-example knowledge base. x01 is the observed all-appointments failure (regression, inspected). The 'new' split was written before any run and is not in knowledge_base/examples.sql; several of its patterns resemble examples (noted per scenario), so it measures use of the examples, not unseen SQL shapes. Fixture scenarios with \"fixture\": \"joins\" run on evaluation/fixture_db.py JOIN_ROWS. After the intent-preservation step, n02 and x02 are regression cases.",
+  "reference_time": "2023-11-15T12:00:00",
+  "scenarios": [
+    {
+      "id": "x01",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "keep_all",
+        "names"
+      ],
+      "turns": [
+        "all appointments with Dr. David Taylor for this month, including the patient's name, the invoice amount, and the hospital branch."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.doctor_id = 'D001' AND a.appointment_date >= '2023-11-01' AND a.appointment_date < '2023-12-01'",
+        "resolved_must_include": [
+          [
+            "all appointments",
+            "every appointment"
+          ],
+          [
+            "november 2023"
+          ]
+        ],
+        "sql_must_match": [
+          "D001",
+          "FROM\\s+appointments",
+          "LEFT\\s+JOIN\\s+treatments",
+          "LEFT\\s+JOIN\\s+billing",
+          "2023-11-01",
+          "2023-12-01"
+        ],
+        "sql_must_not_match": [
+          "FROM\\s+billing",
+          "last_name = 'Dr"
+        ]
+      },
+      "notes": "The real data has one treatment and one bill per appointment, so the SQL checks decide; the row comparison cannot."
+    },
+    {
+      "id": "x02",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "date_column"
+      ],
+      "turns": [
+        "List only the appointments in November 2023 that have an invoice, with the invoice amount."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a JOIN treatments AS t ON t.appointment_id = a.appointment_id JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.appointment_date >= '2023-11-01' AND a.appointment_date < '2023-12-01'",
+        "sql_must_not_match": [
+          "bill_date\\s*(>=|<|between)"
+        ]
+      },
+      "notes": "Observed: the period was also applied to bill_date (copied from example 249)."
+    },
+    {
+      "id": "n01",
+      "split": "new",
+      "fixture": "joins",
+      "tags": [
+        "keep_all",
+        "fixture"
+      ],
+      "turns": [
+        "Give me every appointment from June 2023 together with the amount of each of its bills; appointments that were never billed must still be listed."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01'"
+      },
+      "notes": "Resembles examples 201/248."
+    },
+    {
+      "id": "n02",
+      "split": "regression",
+      "fixture": "joins",
+      "tags": [
+        "keep_all",
+        "fixture",
+        "wording"
+      ],
+      "turns": [
+        "Show the June 2023 visits with their bill amounts, including visits nobody was billed for.",
+        "All of them, any status"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01'"
+      },
+      "notes": "Inspected and fixed after its first run (no longer new). 'Visits' is clarified first because June has Scheduled and Cancelled appointments; the reply chooses every status."
+    },
+    {
+      "id": "n03",
+      "split": "new",
+      "fixture": "joins",
+      "tags": [
+        "only_matching",
+        "fixture"
+      ],
+      "turns": [
+        "Only invoiced appointments please: one row per invoice with the appointment ID and the amount."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a JOIN treatments AS t ON t.appointment_id = a.appointment_id JOIN billing AS b ON b.treatment_id = t.treatment_id"
+      },
+      "notes": "Resembles example 202. The zero-amount invoice B3 must be included."
+    },
+    {
+      "id": "n04",
+      "split": "new",
+      "fixture": "joins",
+      "tags": [
+        "one_to_many",
+        "fixture"
+      ],
+      "turns": [
+        "For each appointment, how many different treatments and how many bills are recorded? Show appointments with none as zero."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, COUNT(DISTINCT t.treatment_id), COUNT(b.bill_id) FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id GROUP BY a.appointment_id"
+      },
+      "notes": "Resembles example 214. COUNT(t.treatment_id) after joining bills counts A4's MRI twice."
+    },
+    {
+      "id": "n05",
+      "split": "new",
+      "fixture": "joins",
+      "tags": [
+        "zero_fill",
+        "fixture"
+      ],
+      "turns": [
+        "What is the total billed per appointment, writing 0 where an appointment has no bills?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, COALESCE(SUM(b.amount), 0) FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id GROUP BY a.appointment_id",
+        "alternative_reference_sqls": [
+          "SELECT a.appointment_id, COALESCE(SUM(b.amount), 0.00) FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id GROUP BY a.appointment_id"
+        ]
+      },
+      "notes": "Resembles example 206. Zero is requested explicitly."
+    },
+    {
+      "id": "n06",
+      "split": "new",
+      "fixture": "joins",
+      "tags": [
+        "one_to_many",
+        "fixture"
+      ],
+      "turns": [
+        "What is each doctor's total treatment cost?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.doctor_id, SUM(t.cost) FROM appointments AS a JOIN treatments AS t ON t.appointment_id = a.appointment_id GROUP BY a.doctor_id",
+        "alternative_reference_sqls": [
+          "SELECT d.doctor_id, SUM(t.cost) FROM doctors AS d LEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id GROUP BY d.doctor_id",
+          "SELECT d.doctor_id, COALESCE(SUM(t.cost), 0) FROM doctors AS d LEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id GROUP BY d.doctor_id"
+        ]
+      },
+      "notes": "D1 has two different treatments with equal cost 100; joining bills duplicates T4a's cost for D2."
+    },
+    {
+      "id": "n07",
+      "split": "new",
+      "fixture": "joins",
+      "tags": [
+        "missing_invoice",
+        "fixture"
+      ],
+      "turns": [
+        "Does appointment A2 have an invoice? Show the appointment with its invoice amount."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.appointment_id = 'A2'"
+      },
+      "notes": "A2 has a treatment and no bill: the answer is one row with a missing (NULL) amount, not 0 rows and not 0."
+    },
+    {
+      "id": "n08",
+      "split": "new",
+      "tags": [
+        "billing_first",
+        "status"
+      ],
+      "turns": [
+        "How much was billed in total for Completed appointments at each branch?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT d.hospital_branch, SUM(b.amount) FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id WHERE a.status = 'Completed' GROUP BY d.hospital_branch"
+      },
+      "notes": "A legitimate billing-first aggregate: must not be flagged by the keep-all check."
+    },
+    {
+      "id": "n09",
+      "split": "new",
+      "tags": [
+        "distinct",
+        "issue_date"
+      ],
+      "turns": [
+        "Per payment method, how many different patients had bills issued in the second half of 2023?"
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT payment_method, COUNT(DISTINCT patient_id) FROM billing WHERE bill_date >= '2023-07-01' AND bill_date < '2024-01-01' GROUP BY payment_method"
+      }
+    },
+    {
+      "id": "n10",
+      "split": "new",
+      "tags": [
+        "keep_all",
+        "names"
+      ],
+      "turns": [
+        "List all appointments of Dr. Sarah Smith in June 2023 with the patient name and the invoice amount."
+      ],
+      "expect": {
+        "route": "data",
+        "order_matters": false,
+        "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.doctor_id = 'D009' AND a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01'",
+        "sql_must_match": [
+          "D009",
+          "FROM\\s+appointments",
+          "LEFT\\s+JOIN"
+        ],
+        "sql_must_not_match": [
+          "FROM\\s+billing",
+          "last_name = 'Dr"
+        ]
+      },
+      "notes": "Resembles example 203 with another doctor and month."
+    },
+    {
+      "id": "n11",
+      "split": "new",
+      "tags": [
+        "payment_date"
+      ],
+      "turns": [
+        "Show the invoices that were paid in October 2023."
+      ],
+      "expect": {
+        "route": "clarification",
+        "reply_must_include": [
+          [
+            "bill_date"
+          ]
+        ]
+      }
+    }
+  ]
+}

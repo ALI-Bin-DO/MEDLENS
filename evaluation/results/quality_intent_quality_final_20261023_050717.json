@@ -1,0 +1,1741 @@
+{
+  "set": "quality-v1",
+  "label": "intent_quality_final",
+  "split": "all",
+  "model": "qwen3.5:4b",
+  "reference_time": "2024-01-15T12:00:00+03:00",
+  "started": "2026-10-23T05:05:24",
+  "settings": {
+    "rag_context_top_k": 5,
+    "num_ctx": 4096,
+    "num_predict": 512
+  },
+  "items": [
+    {
+      "id": "q01",
+      "split": "dev",
+      "tags": [
+        "relative_date",
+        "observed_failure"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments are there this month?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments are there in January 2024?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT appointment_id) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2024-01-01'\n  AND appointment_date < '2024-02-01';"
+          ],
+          "elapsed_seconds": 3.13
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.13,
+      "scenario_seconds": 3.13,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "id": "q02",
+      "split": "dev",
+      "tags": [
+        "relative_date",
+        "year_boundary"
+      ],
+      "turns": [
+        {
+          "message": "What was the total billed amount last month?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What was the total billed amount in December 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT SUM(amount) AS total_billed\nFROM billing\nWHERE bill_date >= '2023-12-01'\n  AND bill_date < '2024-01-01';"
+          ],
+          "elapsed_seconds": 2.96
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.96,
+      "scenario_seconds": 2.96,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "27569.71"
+        ]
+      ]
+    },
+    {
+      "id": "q03",
+      "split": "heldout",
+      "tags": [
+        "explicit_month"
+      ],
+      "turns": [
+        {
+          "message": "How many treatments were performed in March 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many treatments were performed in March 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT treatment_id) AS treatment_count\nFROM treatments\nWHERE treatment_date >= '2023-03-01'\n  AND treatment_date < '2023-04-01';"
+          ],
+          "elapsed_seconds": 2.98
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.98,
+      "scenario_seconds": 2.98,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          19
+        ]
+      ]
+    },
+    {
+      "id": "q04",
+      "split": "dev",
+      "tags": [
+        "date_boundary"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments took place in the second quarter of 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments took place in the second quarter of 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-04-01'\n  AND appointment_date < '2023-07-01';"
+          ],
+          "elapsed_seconds": 2.95
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.95,
+      "scenario_seconds": 2.95,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          62
+        ]
+      ]
+    },
+    {
+      "id": "q05",
+      "split": "heldout",
+      "tags": [
+        "date_boundary"
+      ],
+      "turns": [
+        {
+          "message": "How many bills were issued from 15 March 2023 to 15 April 2023, including both days?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills were issued from 15 March 2023 to 15 April 2023, including both days?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2023-03-15'\n  AND bill_date < '2023-04-16';"
+          ],
+          "elapsed_seconds": 3.21
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.21,
+      "scenario_seconds": 3.21,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          26
+        ]
+      ]
+    },
+    {
+      "id": "q06",
+      "split": "dev",
+      "tags": [
+        "trend",
+        "chart"
+      ],
+      "turns": [
+        {
+          "message": "Show the number of appointments in each month of 2023, in calendar order.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Show the number of appointments in each month of 2023, in calendar order.",
+          "reply": "Answered with a read-only query (12 rows).",
+          "code": null,
+          "sql": [
+            "SELECT DATE_FORMAT(appointment_date, '%Y-%m') AS appointment_month, COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-01-01'\n  AND appointment_date < '2024-01-01'\nGROUP BY DATE_FORMAT(appointment_date, '%Y-%m')\nORDER BY appointment_month;"
+          ],
+          "elapsed_seconds": 3.6
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.6,
+      "scenario_seconds": 3.6,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows in the same order",
+      "model_rows": [
+        [
+          "2023-01",
+          20
+        ],
+        [
+          "2023-02",
+          14
+        ],
+        [
+          "2023-03",
+          19
+        ],
+        [
+          "2023-04",
+          25
+        ],
+        [
+          "2023-05",
+          19
+        ],
+        [
+          "2023-06",
+          18
+        ],
+        [
+          "2023-07",
+          16
+        ],
+        [
+          "2023-08",
+          15
+        ],
+        [
+          "2023-09",
+          11
+        ],
+        [
+          "2023-10",
+          14
+        ],
+        [
+          "2023-11",
+          17
+        ],
+        [
+          "2023-12",
+          12
+        ]
+      ]
+    },
+    {
+      "id": "q07",
+      "split": "heldout",
+      "tags": [
+        "relative_date"
+      ],
+      "turns": [
+        {
+          "message": "Which patients registered last year?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Which patients registered in 2023?",
+          "reply": "Answered with a read-only query (12 rows).",
+          "code": null,
+          "sql": [
+            "SELECT patient_id, first_name, last_name, registration_date\nFROM patients\nWHERE registration_date >= '2023-01-01'\n  AND registration_date < '2024-01-01'\nORDER BY registration_date, patient_id;"
+          ],
+          "elapsed_seconds": 3.12
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.12,
+      "scenario_seconds": 3.12,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [patient_id, first_name, last_name]; model returned 4 columns",
+      "model_rows": [
+        [
+          "P044",
+          "Robert",
+          "Taylor",
+          "2023-01-26"
+        ],
+        [
+          "P029",
+          "David",
+          "Smith",
+          "2023-04-19"
+        ],
+        [
+          "P012",
+          "Laura",
+          "Davis",
+          "2023-04-27"
+        ],
+        [
+          "P050",
+          "Laura",
+          "Wilson",
+          "2023-04-28"
+        ],
+        [
+          "P028",
+          "Alex",
+          "Moore",
+          "2023-05-20"
+        ],
+        [
+          "P049",
+          "David",
+          "Moore",
+          "2023-06-14"
+        ],
+        [
+          "P034",
+          "Alex",
+          "Smith",
+          "2023-06-18"
+        ],
+        [
+          "P048",
+          "Emily",
+          "Miller",
+          "2023-06-19"
+        ],
+        [
+          "P019",
+          "Sarah",
+          "Miller",
+          "2023-06-24"
+        ],
+        [
+          "P035",
+          "David",
+          "Wilson",
+          "2023-07-09"
+        ],
+        [
+          "P033",
+          "Michael",
+          "Wilson",
+          "2023-09-06"
+        ],
+        [
+          "P014",
+          "Alex",
+          "Taylor",
+          "2023-12-12"
+        ]
+      ]
+    },
+    {
+      "id": "q08",
+      "split": "dev",
+      "tags": [
+        "four_table_join"
+      ],
+      "turns": [
+        {
+          "message": "What is the total billed amount for each doctor specialization?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the total billed amount for each doctor specialization?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.specialization, SUM(b.amount) AS total_billed\nFROM billing AS b\nJOIN treatments AS t ON b.treatment_id = t.treatment_id\nJOIN appointments AS a ON t.appointment_id = a.appointment_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nGROUP BY d.specialization\nORDER BY d.specialization;"
+          ],
+          "elapsed_seconds": 3.41
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.41,
+      "scenario_seconds": 3.41,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Dermatology",
+          "202709.29"
+        ],
+        [
+          "Oncology",
+          "89602.73"
+        ],
+        [
+          "Pediatrics",
+          "258937.83"
+        ]
+      ]
+    },
+    {
+      "id": "q09",
+      "split": "heldout",
+      "tags": [
+        "three_table_join"
+      ],
+      "turns": [
+        {
+          "message": "For patients insured by MedCare Plus, how many treatments of each treatment type did they receive?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many treatments of each treatment type did patients insured by MedCare Plus receive?",
+          "reply": "Answered with a read-only query (5 rows).",
+          "code": null,
+          "sql": [
+            "SELECT treatment_type, COUNT(*) AS treatment_count\nFROM treatments\nJOIN appointments ON treatments.appointment_id = appointments.appointment_id\nJOIN patients ON appointments.patient_id = patients.patient_id\nWHERE patients.insurance_provider = 'MedCare Plus'\nGROUP BY treatment_type\nORDER BY treatment_type;"
+          ],
+          "elapsed_seconds": 3.17
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.17,
+      "scenario_seconds": 3.17,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Chemotherapy",
+          20
+        ],
+        [
+          "ECG",
+          17
+        ],
+        [
+          "MRI",
+          15
+        ],
+        [
+          "Physiotherapy",
+          15
+        ],
+        [
+          "X-Ray",
+          17
+        ]
+      ]
+    },
+    {
+      "id": "q10",
+      "split": "dev",
+      "tags": [
+        "four_table_join",
+        "filter"
+      ],
+      "turns": [
+        {
+          "message": "What is the total amount of failed bills in each hospital branch?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the total amount of failed bills in each hospital branch?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.hospital_branch, SUM(b.amount) AS total_failed_amount\nFROM billing AS b\nJOIN treatments AS t ON b.treatment_id = t.treatment_id\nJOIN appointments AS a ON t.appointment_id = a.appointment_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nWHERE b.payment_status = 'Failed'\nGROUP BY d.hospital_branch\nORDER BY d.hospital_branch;"
+          ],
+          "elapsed_seconds": 3.62
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.62,
+      "scenario_seconds": 3.62,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Central Hospital",
+          "82369.67"
+        ],
+        [
+          "Eastside Clinic",
+          "47811.34"
+        ],
+        [
+          "Westside Clinic",
+          "63031.93"
+        ]
+      ]
+    },
+    {
+      "id": "q11",
+      "split": "heldout",
+      "tags": [
+        "zero_count"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments has each patient had? Include patients who have none.",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments has each patient had? Include patients who have none.",
+          "reply": "Answered with a read-only query (50 rows).",
+          "code": null,
+          "sql": [
+            "SELECT p.patient_id, p.first_name, p.last_name, COUNT(a.appointment_id) AS appointment_count\nFROM patients AS p\nLEFT JOIN appointments AS a ON a.patient_id = p.patient_id\nGROUP BY p.patient_id, p.first_name, p.last_name\nORDER BY p.patient_id;"
+          ],
+          "elapsed_seconds": 3.19
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.19,
+      "scenario_seconds": 3.19,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [patient_id, appointment_count]; model returned 4 columns",
+      "model_rows": [
+        [
+          "P001",
+          "David",
+          "Williams",
+          4
+        ],
+        [
+          "P002",
+          "Emily",
+          "Smith",
+          3
+        ],
+        [
+          "P003",
+          "Laura",
+          "Jones",
+          2
+        ],
+        [
+          "P004",
+          "Michael",
+          "Johnson",
+          2
+        ],
+        [
+          "P005",
+          "David",
+          "Wilson",
+          8
+        ],
+        [
+          "P006",
+          "Linda",
+          "Jones",
+          0
+        ],
+        [
+          "P007",
+          "Alex",
+          "Johnson",
+          4
+        ],
+        [
+          "P008",
+          "David",
+          "Davis",
+          2
+        ],
+        [
+          "P009",
+          "Laura",
+          "Davis",
+          4
+        ],
+        [
+          "P010",
+          "Michael",
+          "Taylor",
+          6
+        ],
+        [
+          "P011",
+          "Emily",
+          "Jones",
+          2
+        ],
+        [
+          "P012",
+          "Laura",
+          "Davis",
+          10
+        ],
+        [
+          "P013",
+          "Laura",
+          "Johnson",
+          4
+        ],
+        [
+          "P014",
+          "Alex",
+          "Taylor",
+          3
+        ],
+        [
+          "P015",
+          "Sarah",
+          "Johnson",
+          0
+        ],
+        [
+          "P016",
+          "Michael",
+          "Taylor",
+          7
+        ],
+        [
+          "P017",
+          "Jane",
+          "Jones",
+          4
+        ],
+        [
+          "P018",
+          "Laura",
+          "Wilson",
+          2
+        ],
+        [
+          "P019",
+          "Sarah",
+          "Miller",
+          5
+        ],
+        [
+          "P020",
+          "Jane",
+          "Moore",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "q12",
+      "split": "dev",
+      "tags": [
+        "zero_count",
+        "filter_in_on"
+      ],
+      "turns": [
+        {
+          "message": "How many emergency appointments does each doctor have, including doctors with none?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many emergency appointments does each doctor have, including doctors with none?",
+          "reply": "Answered with a read-only query (10 rows). The first query failed and was corrected once; see sql_attempts.",
+          "code": null,
+          "sql": [
+            "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS emergency_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nWHERE a.reason_for_visit = 'Emergency'\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;",
+            "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS emergency_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.reason_for_visit = 'Emergency'\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 4.86
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 4.86,
+      "scenario_seconds": 4.86,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [doctor_id, emergency_appointment_count]; model returned 4 columns",
+      "model_rows": [
+        [
+          "D001",
+          "David",
+          "Taylor",
+          6
+        ],
+        [
+          "D002",
+          "Jane",
+          "Davis",
+          2
+        ],
+        [
+          "D003",
+          "Jane",
+          "Smith",
+          2
+        ],
+        [
+          "D004",
+          "David",
+          "Jones",
+          3
+        ],
+        [
+          "D005",
+          "Sarah",
+          "Taylor",
+          3
+        ],
+        [
+          "D006",
+          "Alex",
+          "Davis",
+          6
+        ],
+        [
+          "D007",
+          "Robert",
+          "Davis",
+          0
+        ],
+        [
+          "D008",
+          "Linda",
+          "Brown",
+          1
+        ],
+        [
+          "D009",
+          "Sarah",
+          "Smith",
+          3
+        ],
+        [
+          "D010",
+          "Linda",
+          "Wilson",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "q13",
+      "split": "heldout",
+      "tags": [
+        "having",
+        "boundary"
+      ],
+      "turns": [
+        {
+          "message": "Which insurance providers cover more than 16 patients?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "Which insurance providers cover more than 16 patients?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT TRIM(insurance_provider) AS provider, COUNT(DISTINCT patient_id) AS patient_count\nFROM patients\nWHERE TRIM(insurance_provider) <> ''\nGROUP BY TRIM(insurance_provider)\nHAVING COUNT(DISTINCT patient_id) > 16\nORDER BY patient_count DESC, provider;"
+          ],
+          "elapsed_seconds": 3.19
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.19,
+      "scenario_seconds": 3.19,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [provider]; model returned 2 columns",
+      "model_rows": [
+        [
+          "MedCare Plus",
+          18
+        ]
+      ]
+    },
+    {
+      "id": "q14",
+      "split": "dev",
+      "tags": [
+        "distinct"
+      ],
+      "turns": [
+        {
+          "message": "How many different patients have at least one bill?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many different patients have at least one bill?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT b.patient_id) AS patient_count\nFROM billing AS b;"
+          ],
+          "elapsed_seconds": 1.85
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 1.85,
+      "scenario_seconds": 1.85,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          48
+        ]
+      ]
+    },
+    {
+      "id": "q15",
+      "split": "heldout",
+      "tags": [
+        "aggregate"
+      ],
+      "turns": [
+        {
+          "message": "What is the average treatment cost for each treatment type, rounded to 2 decimals?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the average treatment cost for each treatment type?",
+          "reply": "Answered with a read-only query (5 rows).",
+          "code": null,
+          "sql": [
+            "SELECT treatment_type, ROUND(AVG(cost), 2) AS average_cost\nFROM treatments\nGROUP BY treatment_type\nORDER BY average_cost DESC, treatment_type;"
+          ],
+          "elapsed_seconds": 2.72
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.72,
+      "scenario_seconds": 2.72,
+      "routing_ok": true,
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "MRI",
+          "3224.95"
+        ],
+        [
+          "Physiotherapy",
+          "2761.61"
+        ],
+        [
+          "X-Ray",
+          "2698.87"
+        ],
+        [
+          "Chemotherapy",
+          "2629.71"
+        ],
+        [
+          "ECG",
+          "2532.22"
+        ]
+      ]
+    },
+    {
+      "id": "f01",
+      "split": "dev",
+      "tags": [
+        "followup",
+        "replace_grouping",
+        "observed_failure"
+      ],
+      "turns": [
+        {
+          "message": "How many completed appointments does each doctor have?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many completed appointments does each doctor have?",
+          "reply": "Answered with a read-only query (10 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS completed_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.status = 'Completed'\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 3.36
+        },
+        {
+          "message": "Do it by hospital branch",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many completed appointments does each hospital branch have?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.hospital_branch, COUNT(*) AS appointment_count\nFROM appointments AS a\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nWHERE a.status = 'Completed'\nGROUP BY d.hospital_branch\nORDER BY d.hospital_branch;"
+          ],
+          "elapsed_seconds": 3.0
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.0,
+      "scenario_seconds": 6.36,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Central Hospital",
+          15
+        ],
+        [
+          "Eastside Clinic",
+          16
+        ],
+        [
+          "Westside Clinic",
+          15
+        ]
+      ]
+    },
+    {
+      "id": "f02",
+      "split": "heldout",
+      "tags": [
+        "followup",
+        "replace_grouping"
+      ],
+      "turns": [
+        {
+          "message": "What is the total billed amount per doctor?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the total billed amount per doctor?",
+          "reply": "Answered with a read-only query (10 rows). The first query failed and was corrected once; see sql_attempts.",
+          "code": null,
+          "sql": [
+            "SELECT d.doctor_id, d.first_name, d.last_name, COALESCE(SUM(b.amount), 0) AS total_billed\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;",
+            "SELECT d.doctor_id, d.first_name, d.last_name, SUM(b.amount) AS total_billed\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 5.8
+        },
+        {
+          "message": "Show it per specialization instead",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the total billed amount per specialization?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.specialization, SUM(b.amount) AS total_billed\nFROM billing AS b\nJOIN treatments AS t ON b.treatment_id = t.treatment_id\nJOIN appointments AS a ON t.appointment_id = a.appointment_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nGROUP BY d.specialization\nORDER BY d.specialization;"
+          ],
+          "elapsed_seconds": 3.42
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.42,
+      "scenario_seconds": 9.22,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Dermatology",
+          "202709.29"
+        ],
+        [
+          "Oncology",
+          "89602.73"
+        ],
+        [
+          "Pediatrics",
+          "258937.83"
+        ]
+      ]
+    },
+    {
+      "id": "f03",
+      "split": "dev",
+      "tags": [
+        "followup",
+        "add_grouping"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments are there for each status?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments are there for each status?",
+          "reply": "Answered with a read-only query (4 rows).",
+          "code": null,
+          "sql": [
+            "SELECT status, COUNT(*) AS appointment_count\nFROM appointments\nGROUP BY status\nORDER BY status;"
+          ],
+          "elapsed_seconds": 2.45
+        },
+        {
+          "message": "Also break it down by hospital branch",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments are there for each status, broken down by hospital branch?",
+          "reply": "Answered with a read-only query (12 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.hospital_branch, a.status, COUNT(*) AS appointment_count\nFROM appointments AS a\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nGROUP BY d.hospital_branch, a.status\nORDER BY d.hospital_branch, a.status;"
+          ],
+          "elapsed_seconds": 3.12
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.12,
+      "scenario_seconds": 5.57,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "Central Hospital",
+          "Scheduled",
+          24
+        ],
+        [
+          "Central Hospital",
+          "Completed",
+          15
+        ],
+        [
+          "Central Hospital",
+          "Cancelled",
+          19
+        ],
+        [
+          "Central Hospital",
+          "No-show",
+          26
+        ],
+        [
+          "Eastside Clinic",
+          "Scheduled",
+          18
+        ],
+        [
+          "Eastside Clinic",
+          "Completed",
+          16
+        ],
+        [
+          "Eastside Clinic",
+          "Cancelled",
+          15
+        ],
+        [
+          "Eastside Clinic",
+          "No-show",
+          13
+        ],
+        [
+          "Westside Clinic",
+          "Scheduled",
+          9
+        ],
+        [
+          "Westside Clinic",
+          "Completed",
+          15
+        ],
+        [
+          "Westside Clinic",
+          "Cancelled",
+          17
+        ],
+        [
+          "Westside Clinic",
+          "No-show",
+          13
+        ]
+      ]
+    },
+    {
+      "id": "f04",
+      "split": "heldout",
+      "tags": [
+        "followup",
+        "add_grouping"
+      ],
+      "turns": [
+        {
+          "message": "What is the total amount of paid bills for each payment method?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the total amount of paid bills for each payment method?",
+          "reply": "Answered with a read-only query (3 rows).",
+          "code": null,
+          "sql": [
+            "SELECT payment_method, SUM(CASE WHEN payment_status = 'Paid' THEN amount ELSE 0 END) AS total_paid\nFROM billing\nGROUP BY payment_method\nORDER BY payment_method;"
+          ],
+          "elapsed_seconds": 2.87
+        },
+        {
+          "message": "Split that by patient gender as well",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What is the total amount of paid bills for each payment method, broken down by gender?",
+          "reply": "Answered with a read-only query (6 rows). The first query failed and was corrected once; see sql_attempts.",
+          "code": null,
+          "sql": [
+            "SELECT p.gender, SUM(b.amount) AS total_paid\nFROM billing AS b\nJOIN patients AS p ON b.patient_id = p.patient_id\nWHERE b.payment_status = 'Paid'\nGROUP BY p.gender\nORDER BY p.gender;",
+            "SELECT p.gender, b.payment_method, SUM(CASE WHEN b.payment_status = 'Paid' THEN b.amount ELSE NULL END) AS total_paid\nFROM billing AS b\nJOIN patients AS p ON b.patient_id = p.patient_id\nGROUP BY p.gender, b.payment_method\nORDER BY p.gender, b.payment_method;"
+          ],
+          "elapsed_seconds": 4.05
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 4.05,
+      "scenario_seconds": 6.92,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "M",
+          "Cash",
+          "24721.75"
+        ],
+        [
+          "M",
+          "Credit Card",
+          "35068.20"
+        ],
+        [
+          "M",
+          "Insurance",
+          "44802.04"
+        ],
+        [
+          "F",
+          "Cash",
+          "27969.55"
+        ],
+        [
+          "F",
+          "Credit Card",
+          "25308.91"
+        ],
+        [
+          "F",
+          "Insurance",
+          "15554.45"
+        ]
+      ]
+    },
+    {
+      "id": "f05",
+      "split": "dev",
+      "tags": [
+        "followup",
+        "filter",
+        "zero_count"
+      ],
+      "turns": [
+        {
+          "message": "How many appointments does each doctor have, including doctors with no appointments?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many appointments does each doctor have, including doctors with no appointments?",
+          "reply": "Answered with a read-only query (10 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 3.32
+        },
+        {
+          "message": "Only no-shows",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many no-show appointments does each doctor have, including doctors with no no-show appointments?",
+          "reply": "Answered with a read-only query (10 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS no_show_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.status = 'No-show'\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 3.07
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.07,
+      "scenario_seconds": 6.39,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match_extra_columns: reference rows reproduced by model columns [doctor_id, no_show_count]; model returned 4 columns",
+      "model_rows": [
+        [
+          "D001",
+          "David",
+          "Taylor",
+          7
+        ],
+        [
+          "D002",
+          "Jane",
+          "Davis",
+          1
+        ],
+        [
+          "D003",
+          "Jane",
+          "Smith",
+          7
+        ],
+        [
+          "D004",
+          "David",
+          "Jones",
+          5
+        ],
+        [
+          "D005",
+          "Sarah",
+          "Taylor",
+          9
+        ],
+        [
+          "D006",
+          "Alex",
+          "Davis",
+          6
+        ],
+        [
+          "D007",
+          "Robert",
+          "Davis",
+          2
+        ],
+        [
+          "D008",
+          "Linda",
+          "Brown",
+          4
+        ],
+        [
+          "D009",
+          "Sarah",
+          "Smith",
+          6
+        ],
+        [
+          "D010",
+          "Linda",
+          "Wilson",
+          5
+        ]
+      ]
+    },
+    {
+      "id": "f06",
+      "split": "heldout",
+      "tags": [
+        "followup",
+        "ambiguous"
+      ],
+      "turns": [
+        {
+          "message": "How many cancelled appointments are there?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many cancelled appointments are there?",
+          "reply": "Answered with a read-only query (1 row). The first query failed and was corrected once; see sql_attempts.",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT patient_id) AS patient_count\nFROM appointments\nWHERE status = 'Cancelled';",
+            "SELECT COUNT(*) AS cancelled_appointment_count\nFROM appointments\nWHERE status = 'Cancelled';"
+          ],
+          "elapsed_seconds": 2.91
+        },
+        {
+          "message": "What about the other status?",
+          "stage": "needs_clarification",
+          "route": "needs_clarification",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "Could you ask the full question? I couldn't tell what words like \"them\" or \"that\" refer to in this conversation. Name what you want counted or listed, for example: \"How many patients are registered?\"",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 0.94
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 0.94,
+      "scenario_seconds": 3.85,
+      "routing_ok": true
+    },
+    {
+      "id": "f07",
+      "split": "dev",
+      "tags": [
+        "followup",
+        "topic_change"
+      ],
+      "turns": [
+        {
+          "message": "How many completed appointments does each doctor have?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many completed appointments does each doctor have?",
+          "reply": "Answered with a read-only query (10 rows).",
+          "code": null,
+          "sql": [
+            "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS completed_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.status = 'Completed'\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;"
+          ],
+          "elapsed_seconds": 2.77
+        },
+        {
+          "message": "How many patients use each insurance provider?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many patients use each insurance provider?",
+          "reply": "Answered with a read-only query (4 rows).",
+          "code": null,
+          "sql": [
+            "SELECT p.insurance_provider, COUNT(DISTINCT p.patient_id) AS patient_count\nFROM patients AS p\nWHERE p.insurance_provider IS NOT NULL\nGROUP BY p.insurance_provider\nORDER BY patient_count DESC, p.insurance_provider;"
+          ],
+          "elapsed_seconds": 2.45
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 2.45,
+      "scenario_seconds": 5.23,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          "MedCare Plus",
+          18
+        ],
+        [
+          "WellnessCorp",
+          16
+        ],
+        [
+          "PulseSecure",
+          10
+        ],
+        [
+          "HealthIndia",
+          6
+        ]
+      ]
+    },
+    {
+      "id": "f08",
+      "split": "heldout",
+      "tags": [
+        "followup",
+        "unrelated"
+      ],
+      "turns": [
+        {
+          "message": "How many patients are female?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many patients are female?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(DISTINCT patient_id) AS female_patient_count\nFROM patients\nWHERE gender = 'F';"
+          ],
+          "elapsed_seconds": 1.82
+        },
+        {
+          "message": "What is the capital of France?",
+          "stage": "cannot_answer",
+          "route": "out_of_scope",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "That's outside what I can help with. MedLens answers English questions about this hospital's data - patients, doctors, appointments, treatments and billing - by generating a read-only SQL query, validating it and running it.",
+          "code": "out_of_scope",
+          "sql": [],
+          "elapsed_seconds": 0.97
+        }
+      ],
+      "expected_route": "out_of_scope",
+      "scored_seconds": 0.97,
+      "scenario_seconds": 2.79,
+      "routing_ok": true
+    },
+    {
+      "id": "f09",
+      "split": "dev",
+      "tags": [
+        "followup",
+        "relative_date",
+        "year_boundary"
+      ],
+      "turns": [
+        {
+          "message": "How many bills were issued in January 2023?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills were issued in January 2023?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2023-01-01'\n  AND bill_date < '2023-02-01';"
+          ],
+          "elapsed_seconds": 2.89
+        },
+        {
+          "message": "What about the previous month?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills were issued in December 2022?",
+          "reply": "Answered with a read-only query (1 row).",
+          "code": null,
+          "sql": [
+            "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2022-12-01'\n  AND bill_date < '2023-01-01';"
+          ],
+          "elapsed_seconds": 3.01
+        }
+      ],
+      "expected_route": "data",
+      "scored_seconds": 3.01,
+      "scenario_seconds": 5.9,
+      "routing_ok": true,
+      "resolved_ok": true,
+      "resolved_problems": [],
+      "result_ok": true,
+      "result_detail": "match: same rows (order ignored)",
+      "model_rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "id": "u01",
+      "split": "dev",
+      "tags": [
+        "unavailable"
+      ],
+      "turns": [
+        {
+          "message": "On what date was each paid bill actually paid?",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "On what date was each paid bill actually paid?",
+          "reply": "The data does not record when a bill was paid: billing has bill_date, the date the bill was issued, and the current payment status. Should I use bill_date instead?",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.08
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.08,
+      "scenario_seconds": 1.08,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "u02",
+      "split": "heldout",
+      "tags": [
+        "unavailable"
+      ],
+      "turns": [
+        {
+          "message": "How many bills were paid during March 2023?",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many bills were paid during March 2023?",
+          "reply": "The data does not record when a bill was paid: billing has bill_date, the date the bill was issued, and the current payment status. Should I use bill_date instead?",
+          "code": "ambiguous",
+          "sql": [],
+          "elapsed_seconds": 1.05
+        }
+      ],
+      "expected_route": "clarification",
+      "scored_seconds": 1.05,
+      "scenario_seconds": 1.05,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "u03",
+      "split": "heldout",
+      "tags": [
+        "unavailable"
+      ],
+      "turns": [
+        {
+          "message": "What diagnosis did each patient receive?",
+          "stage": "needs_clarification",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "What diagnosis did each patient receive?",
+          "reply": "diagnosis is not stored; should I use description instead?",
+          "code": null,
+          "sql": [
+            null
+          ],
+          "elapsed_seconds": 2.21
+        }
+      ],
+      "expected_route": "no_sql",
+      "scored_seconds": 2.21,
+      "scenario_seconds": 2.21,
+      "routing_ok": true
+    },
+    {
+      "id": "c01",
+      "split": "dev",
+      "tags": [
+        "capability",
+        "observed_failure"
+      ],
+      "turns": [
+        {
+          "message": "What types of charts can you create?",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "Every answer includes a table. When a result has one numeric measure per category or per date, MedLens also offers a chart: vertical bars for a few categories with short names; horizontal bars for long category names or many categories; a line for a trend over dates or months, in date order; a pie/donut for up to 5 categories whose counts or totals add up to a meaningful whole (never for averages, rates or groups that overlap). The chart-type buttons above the chart switch between the views that fit the result; switching reuses the same rows and runs no new query. Hover a bar, point or slice to see its exact value.",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 0.87
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 0.87,
+      "scenario_seconds": 0.87,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "c02",
+      "split": "heldout",
+      "tags": [
+        "capability"
+      ],
+      "turns": [
+        {
+          "message": "Is it possible to download my results?",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "Each result table has an Export CSV button. It downloads exactly the rows shown, with exact values, as a UTF-8 CSV file, without running the question again. If the result was cut at the row limit, the file is marked as a partial export.",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 0.8
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 0.8,
+      "scenario_seconds": 0.8,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "c03",
+      "split": "dev",
+      "tags": [
+        "capability"
+      ],
+      "turns": [
+        {
+          "message": "Which data do you have access to?",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "MedLens reads five tables of this hospital's database: patients (registration, gender, date of birth, insurance provider and contact details); doctors (specialization, hospital branch and years of experience); appointments (date, time, reason for visit and status, linking patients and doctors); treatments (treatment type, description, cost and date, linked to appointments); billing (bill date, amount, payment method and payment status). Monetary amounts have no stated currency, and bills record the date they were issued (bill_date), not the date they were paid. Ask in English, for example: \"How many patients are registered?\"",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 0.84
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 0.84,
+      "scenario_seconds": 0.84,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "c04",
+      "split": "heldout",
+      "tags": [
+        "capability"
+      ],
+      "turns": [
+        {
+          "message": "Will you remember this conversation tomorrow?",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "Within one conversation you can ask follow-ups such as \"Only completed ones\" or \"Do it by hospital branch\". The server keeps the last 5 answered questions of a conversation in memory only: it expires after 30 minutes without use, is lost when the server restarts and is never saved. A new conversation starts with no memory.",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 0.84
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 0.84,
+      "scenario_seconds": 0.84,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "c05",
+      "split": "dev",
+      "tags": [
+        "capability",
+        "read_only"
+      ],
+      "turns": [
+        {
+          "message": "Can you delete a patient record for me?",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "MedLens is read-only: it only runs validated SELECT queries with a read-only database account, so it cannot add, change or delete records. It answers English questions about the five hospital tables only, and it cannot answer from information that is not stored, such as diagnoses or the date a bill was paid.",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 0.85
+        }
+      ],
+      "expected_route": "no_sql",
+      "scored_seconds": 0.85,
+      "scenario_seconds": 0.85,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    },
+    {
+      "id": "c06",
+      "split": "dev",
+      "tags": [
+        "capability",
+        "view_change"
+      ],
+      "turns": [
+        {
+          "message": "How many treatments are there of each type?",
+          "stage": "answered",
+          "route": "data_question",
+          "route_source": "classifier",
+          "resolved_question": "How many treatments are there of each type?",
+          "reply": "Answered with a read-only query (5 rows).",
+          "code": null,
+          "sql": [
+            "SELECT treatment_type, COUNT(*) AS treatment_count\nFROM treatments\nGROUP BY treatment_type\nORDER BY treatment_type;"
+          ],
+          "elapsed_seconds": 1.84
+        },
+        {
+          "message": "Show that as a pie chart",
+          "stage": "conversation",
+          "route": "capabilities",
+          "route_source": "classifier",
+          "resolved_question": null,
+          "reply": "Here is the previous result's chart as a donut. It reuses the same rows; no new query was run.",
+          "code": "capabilities",
+          "sql": [],
+          "elapsed_seconds": 1.14
+        }
+      ],
+      "expected_route": "conversation",
+      "scored_seconds": 1.14,
+      "scenario_seconds": 2.98,
+      "routing_ok": true,
+      "reply_ok": true,
+      "reply_problems": []
+    }
+  ],
+  "date_given_to_model": true,
+  "summary": {
+    "dev": {
+      "routing_ok": "18/18",
+      "resolved_ok": "7/7",
+      "result_ok": "13/13",
+      "sql_ok": "n/a",
+      "reply_ok": "5/5",
+      "presentation_ok": "n/a",
+      "median_scored_seconds": 3.0
+    },
+    "heldout": {
+      "routing_ok": "15/15",
+      "resolved_ok": "3/3",
+      "result_ok": "9/9",
+      "sql_ok": "n/a",
+      "reply_ok": "3/3",
+      "presentation_ok": "n/a",
+      "median_scored_seconds": 2.98
+    },
+    "all": {
+      "routing_ok": "33/33",
+      "resolved_ok": "10/10",
+      "result_ok": "22/22",
+      "sql_ok": "n/a",
+      "reply_ok": "8/8",
+      "presentation_ok": "n/a",
+      "median_scored_seconds": 2.98
+    }
+  }
+}

@@ -1,0 +1,198 @@
+{
+  "name": "quality-v1",
+  "purpose": "Before/after evaluation for the answer-quality milestone (dates, follow-up grouping, joins, zero counts, capability replies, unavailable data). References were written before any model output was seen. Never add these questions or reference queries to knowledge_base/.",
+  "reference_time": "2024-01-15T12:00:00",
+  "reference_time_note": "All data is from 2023, so a 2024 reference date separates correct year-aware ranges from MONTH()-only filters. The evaluation pins both the prompt date and MySQL's session timestamp to this time.",
+  "split_note": "dev items may guide prompt and knowledge changes; heldout items are only run for the baseline and the final comparison and must not be used for tuning.",
+  "scenarios": [
+    {
+      "id": "q01", "split": "dev", "tags": ["relative_date", "observed_failure"],
+      "turns": ["How many appointments are there this month?"],
+      "expect": {"route": "data", "reference_sql": "SELECT COUNT(*) FROM appointments WHERE appointment_date >= '2024-01-01' AND appointment_date < '2024-02-01'", "order_matters": false,
+                 "resolved_must_include": [["january 2024", "2024-01", "this month"]]},
+      "notes": "Correct answer is 0 (January 2024). MONTH(appointment_date) = MONTH(CURDATE()) without the year returns 20 (January 2023)."
+    },
+    {
+      "id": "q02", "split": "dev", "tags": ["relative_date", "year_boundary"],
+      "turns": ["What was the total billed amount last month?"],
+      "expect": {"route": "data", "reference_sql": "SELECT SUM(amount) FROM billing WHERE bill_date >= '2023-12-01' AND bill_date < '2024-01-01'", "order_matters": false,
+                 "resolved_must_include": [["december 2023", "2023-12", "last month"]]},
+      "notes": "Last month of 2024-01-15 is December 2023. MONTH(CURDATE()) - 1 gives month 0 and YEAR(CURDATE()) gives 2024: both return NULL/0."
+    },
+    {
+      "id": "q03", "split": "heldout", "tags": ["explicit_month"],
+      "turns": ["How many treatments were performed in March 2023?"],
+      "expect": {"route": "data", "reference_sql": "SELECT COUNT(*) FROM treatments WHERE treatment_date >= '2023-03-01' AND treatment_date < '2023-04-01'", "order_matters": false}
+    },
+    {
+      "id": "q04", "split": "dev", "tags": ["date_boundary"],
+      "turns": ["How many appointments took place in the second quarter of 2023?"],
+      "expect": {"route": "data", "reference_sql": "SELECT COUNT(*) FROM appointments WHERE appointment_date >= '2023-04-01' AND appointment_date < '2023-07-01'", "order_matters": false},
+      "notes": "Must include 30 June; an end bound of '2023-06-30' with < would drop it."
+    },
+    {
+      "id": "q05", "split": "heldout", "tags": ["date_boundary"],
+      "turns": ["How many bills were issued from 15 March 2023 to 15 April 2023, including both days?"],
+      "expect": {"route": "data", "reference_sql": "SELECT COUNT(*) FROM billing WHERE bill_date BETWEEN '2023-03-15' AND '2023-04-15'", "order_matters": false}
+    },
+    {
+      "id": "q06", "split": "dev", "tags": ["trend", "chart"],
+      "turns": ["Show the number of appointments in each month of 2023, in calendar order."],
+      "expect": {"route": "data", "reference_sql": "SELECT DATE_FORMAT(appointment_date, '%Y-%m') AS month, COUNT(*) FROM appointments WHERE appointment_date >= '2023-01-01' AND appointment_date < '2024-01-01' GROUP BY DATE_FORMAT(appointment_date, '%Y-%m') ORDER BY month", "order_matters": true,
+                 "alternative_reference_sqls": ["SELECT MONTH(appointment_date), COUNT(*) FROM appointments WHERE YEAR(appointment_date) = 2023 GROUP BY MONTH(appointment_date) ORDER BY MONTH(appointment_date)"]}
+    },
+    {
+      "id": "q07", "split": "heldout", "tags": ["relative_date"],
+      "turns": ["Which patients registered last year?"],
+      "expect": {"route": "data", "reference_sql": "SELECT patient_id, first_name, last_name FROM patients WHERE registration_date >= '2023-01-01' AND registration_date < '2024-01-01'", "order_matters": false,
+                 "resolved_must_include": [["2023", "last year"]]}
+    },
+    {
+      "id": "q08", "split": "dev", "tags": ["four_table_join"],
+      "turns": ["What is the total billed amount for each doctor specialization?"],
+      "expect": {"route": "data", "reference_sql": "SELECT d.specialization, SUM(b.amount) FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id GROUP BY d.specialization", "order_matters": false}
+    },
+    {
+      "id": "q09", "split": "heldout", "tags": ["three_table_join"],
+      "turns": ["For patients insured by MedCare Plus, how many treatments of each treatment type did they receive?"],
+      "expect": {"route": "data", "reference_sql": "SELECT t.treatment_type, COUNT(*) FROM treatments AS t JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN patients AS p ON a.patient_id = p.patient_id WHERE p.insurance_provider = 'MedCare Plus' GROUP BY t.treatment_type", "order_matters": false}
+    },
+    {
+      "id": "q10", "split": "dev", "tags": ["four_table_join", "filter"],
+      "turns": ["What is the total amount of failed bills in each hospital branch?"],
+      "expect": {"route": "data", "reference_sql": "SELECT d.hospital_branch, SUM(b.amount) FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id WHERE b.payment_status = 'Failed' GROUP BY d.hospital_branch", "order_matters": false}
+    },
+    {
+      "id": "q11", "split": "heldout", "tags": ["zero_count"],
+      "turns": ["How many appointments has each patient had? Include patients who have none."],
+      "expect": {"route": "data", "reference_sql": "SELECT p.patient_id, COUNT(a.appointment_id) FROM patients AS p LEFT JOIN appointments AS a ON a.patient_id = p.patient_id GROUP BY p.patient_id", "order_matters": false},
+      "notes": "Two patients have no appointments, so an inner join returns 48 rows instead of 50."
+    },
+    {
+      "id": "q12", "split": "dev", "tags": ["zero_count", "filter_in_on"],
+      "turns": ["How many emergency appointments does each doctor have, including doctors with none?"],
+      "expect": {"route": "data", "reference_sql": "SELECT d.doctor_id, COUNT(a.appointment_id) FROM doctors AS d LEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.reason_for_visit = 'Emergency' GROUP BY d.doctor_id", "order_matters": false}
+    },
+    {
+      "id": "q13", "split": "heldout", "tags": ["having", "boundary"],
+      "turns": ["Which insurance providers cover more than 16 patients?"],
+      "expect": {"route": "data", "reference_sql": "SELECT insurance_provider FROM patients GROUP BY insurance_provider HAVING COUNT(*) > 16", "order_matters": false},
+      "notes": "Counts are 18, 16, 10, 6: '>= 16' would wrongly include WellnessCorp."
+    },
+    {
+      "id": "q14", "split": "dev", "tags": ["distinct"],
+      "turns": ["How many different patients have at least one bill?"],
+      "expect": {"route": "data", "reference_sql": "SELECT COUNT(DISTINCT patient_id) FROM billing", "order_matters": false}
+    },
+    {
+      "id": "q15", "split": "heldout", "tags": ["aggregate"],
+      "turns": ["What is the average treatment cost for each treatment type, rounded to 2 decimals?"],
+      "expect": {"route": "data", "reference_sql": "SELECT treatment_type, ROUND(AVG(cost), 2) FROM treatments GROUP BY treatment_type", "order_matters": false}
+    },
+    {
+      "id": "f01", "split": "dev", "tags": ["followup", "replace_grouping", "observed_failure"],
+      "turns": ["How many completed appointments does each doctor have?", "Do it by hospital branch"],
+      "expect": {"route": "data", "reference_sql": "SELECT d.hospital_branch, COUNT(*) FROM appointments AS a JOIN doctors AS d ON a.doctor_id = d.doctor_id WHERE a.status = 'Completed' GROUP BY d.hospital_branch", "order_matters": false,
+                 "resolved_must_include": [["branch"], ["completed"]], "resolved_must_exclude": ["each doctor", "per doctor"]},
+      "notes": "Replacement: the doctor grouping is dropped, the completed filter is kept."
+    },
+    {
+      "id": "f02", "split": "heldout", "tags": ["followup", "replace_grouping"],
+      "turns": ["What is the total billed amount per doctor?", "Show it per specialization instead"],
+      "expect": {"route": "data", "reference_sql": "SELECT d.specialization, SUM(b.amount) FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id GROUP BY d.specialization", "order_matters": false,
+                 "resolved_must_include": [["specialization"], ["billed", "bill"]], "resolved_must_exclude": ["per doctor", "each doctor"]}
+    },
+    {
+      "id": "f03", "split": "dev", "tags": ["followup", "add_grouping"],
+      "turns": ["How many appointments are there for each status?", "Also break it down by hospital branch"],
+      "expect": {"route": "data", "reference_sql": "SELECT a.status, d.hospital_branch, COUNT(*) FROM appointments AS a JOIN doctors AS d ON a.doctor_id = d.doctor_id GROUP BY a.status, d.hospital_branch", "order_matters": false,
+                 "resolved_must_include": [["status"], ["branch"]]},
+      "notes": "Additive: both status and branch remain groupings."
+    },
+    {
+      "id": "f04", "split": "heldout", "tags": ["followup", "add_grouping"],
+      "turns": ["What is the total amount of paid bills for each payment method?", "Split that by patient gender as well"],
+      "expect": {"route": "data", "reference_sql": "SELECT b.payment_method, p.gender, SUM(b.amount) FROM billing AS b JOIN patients AS p ON b.patient_id = p.patient_id WHERE b.payment_status = 'Paid' GROUP BY b.payment_method, p.gender", "order_matters": false,
+                 "resolved_must_include": [["payment method"], ["gender"], ["paid"]]}
+    },
+    {
+      "id": "f05", "split": "dev", "tags": ["followup", "filter", "zero_count"],
+      "turns": ["How many appointments does each doctor have, including doctors with no appointments?", "Only no-shows"],
+      "expect": {"route": "data", "reference_sql": "SELECT d.doctor_id, COUNT(a.appointment_id) FROM doctors AS d LEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.status = 'No-show' GROUP BY d.doctor_id", "order_matters": false,
+                 "resolved_must_include": [["no-show", "no show"], ["doctor"]]}
+    },
+    {
+      "id": "f06", "split": "heldout", "tags": ["followup", "ambiguous"],
+      "turns": ["How many cancelled appointments are there?", "What about the other status?"],
+      "expect": {"route": "clarification"},
+      "notes": "There are three other statuses, so the follow-up is genuinely ambiguous."
+    },
+    {
+      "id": "f07", "split": "dev", "tags": ["followup", "topic_change"],
+      "turns": ["How many completed appointments does each doctor have?", "How many patients use each insurance provider?"],
+      "expect": {"route": "data", "reference_sql": "SELECT insurance_provider, COUNT(*) FROM patients GROUP BY insurance_provider", "order_matters": false,
+                 "resolved_must_include": [["insurance"]], "resolved_must_exclude": ["completed", "doctor"]}
+    },
+    {
+      "id": "f08", "split": "heldout", "tags": ["followup", "unrelated"],
+      "turns": ["How many patients are female?", "What is the capital of France?"],
+      "expect": {"route": "out_of_scope"}
+    },
+    {
+      "id": "f09", "split": "dev", "tags": ["followup", "relative_date", "year_boundary"],
+      "turns": ["How many bills were issued in January 2023?", "What about the previous month?"],
+      "expect": {"route": "data", "reference_sql": "SELECT COUNT(*) FROM billing WHERE bill_date >= '2022-12-01' AND bill_date < '2023-01-01'", "order_matters": false,
+                 "resolved_must_include": [["december 2022", "2022-12"]]},
+      "notes": "The previous month is December 2022 (0 bills); December 2023 (12 bills) is the year-boundary mistake."
+    },
+    {
+      "id": "u01", "split": "dev", "tags": ["unavailable"],
+      "turns": ["On what date was each paid bill actually paid?"],
+      "expect": {"route": "clarification", "reply_must_include": [["bill_date", "bill date"]]},
+      "notes": "There is no payment date. The answer must say so and ask whether bill_date is acceptable, not silently use it."
+    },
+    {
+      "id": "u02", "split": "heldout", "tags": ["unavailable"],
+      "turns": ["How many bills were paid during March 2023?"],
+      "expect": {"route": "clarification", "reply_must_include": [["bill_date", "bill date", "issued"]]},
+      "notes": "'Paid during March' asks when payment happened; only the bill date exists."
+    },
+    {
+      "id": "u03", "split": "heldout", "tags": ["unavailable"],
+      "turns": ["What diagnosis did each patient receive?"],
+      "expect": {"route": "no_sql"},
+      "notes": "No diagnosis column. Any outcome that runs no SQL (cannot answer or clarification) is acceptable."
+    },
+    {
+      "id": "c01", "split": "dev", "tags": ["capability", "observed_failure"],
+      "turns": ["What types of charts can you create?"],
+      "expect": {"route": "conversation", "reply_must_include": [["bar"], ["line"], ["pie", "donut"]]}
+    },
+    {
+      "id": "c02", "split": "heldout", "tags": ["capability"],
+      "turns": ["Is it possible to download my results?"],
+      "expect": {"route": "conversation", "reply_must_include": [["csv"]]}
+    },
+    {
+      "id": "c03", "split": "dev", "tags": ["capability"],
+      "turns": ["Which data do you have access to?"],
+      "expect": {"route": "conversation", "reply_must_include": [["patients"], ["billing", "bills"]]}
+    },
+    {
+      "id": "c04", "split": "heldout", "tags": ["capability"],
+      "turns": ["Will you remember this conversation tomorrow?"],
+      "expect": {"route": "conversation", "reply_must_include": [["temporary", "expire", "not saved", "lost"]]}
+    },
+    {
+      "id": "c05", "split": "dev", "tags": ["capability", "read_only"],
+      "turns": ["Can you delete a patient record for me?"],
+      "expect": {"route": "no_sql", "reply_must_include": [["read-only", "read only"]]}
+    },
+    {
+      "id": "c06", "split": "dev", "tags": ["capability", "view_change"],
+      "turns": ["How many treatments are there of each type?", "Show that as a pie chart"],
+      "expect": {"route": "conversation", "reply_must_include": [["chart"]]},
+      "notes": "A view change of the existing result must not run a new query."
+    }
+  ]
+}
