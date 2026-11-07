@@ -1,0 +1,2681 @@
+{
+  "name": "rq2-v1",
+  "model": "qwen3.5:4b",
+  "top_k": 5,
+  "reference_time": "2024-01-15T10:00:00+03:00",
+  "started": "2026-11-07T13:21:16",
+  "configs": [
+    "schema_only",
+    "examples_only",
+    "schema_plus_examples",
+    "production"
+  ],
+  "questions": [
+    {
+      "id": "dev-03",
+      "split": "dev-v1",
+      "tags": [],
+      "question": "Which treatment types have an average cost greater than 500, ordered from highest average cost to lowest?",
+      "reference_sql": "SELECT treatment_type, AVG(cost) AS average_cost FROM treatments GROUP BY treatment_type HAVING AVG(cost) > 500 ORDER BY average_cost DESC",
+      "order_matters": true,
+      "set": "dev_set"
+    },
+    {
+      "id": "dev-04",
+      "split": "dev-v1",
+      "tags": [],
+      "question": "How many distinct patients had cancelled appointments?",
+      "reference_sql": "SELECT COUNT(DISTINCT patient_id) AS patients_with_cancelled_appointments FROM appointments WHERE status = 'Cancelled'",
+      "order_matters": false,
+      "set": "dev_set"
+    },
+    {
+      "id": "q01",
+      "split": "dev",
+      "tags": [
+        "relative_date",
+        "observed_failure"
+      ],
+      "question": "How many appointments are there this month?",
+      "reference_sql": "SELECT COUNT(*) FROM appointments WHERE appointment_date >= '2024-01-01' AND appointment_date < '2024-02-01'",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q02",
+      "split": "dev",
+      "tags": [
+        "relative_date",
+        "year_boundary"
+      ],
+      "question": "What was the total billed amount last month?",
+      "reference_sql": "SELECT SUM(amount) FROM billing WHERE bill_date >= '2023-12-01' AND bill_date < '2024-01-01'",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q03",
+      "split": "heldout",
+      "tags": [
+        "explicit_month"
+      ],
+      "question": "How many treatments were performed in March 2023?",
+      "reference_sql": "SELECT COUNT(*) FROM treatments WHERE treatment_date >= '2023-03-01' AND treatment_date < '2023-04-01'",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q04",
+      "split": "dev",
+      "tags": [
+        "date_boundary"
+      ],
+      "question": "How many appointments took place in the second quarter of 2023?",
+      "reference_sql": "SELECT COUNT(*) FROM appointments WHERE appointment_date >= '2023-04-01' AND appointment_date < '2023-07-01'",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q05",
+      "split": "heldout",
+      "tags": [
+        "date_boundary"
+      ],
+      "question": "How many bills were issued from 15 March 2023 to 15 April 2023, including both days?",
+      "reference_sql": "SELECT COUNT(*) FROM billing WHERE bill_date BETWEEN '2023-03-15' AND '2023-04-15'",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q06",
+      "split": "dev",
+      "tags": [
+        "trend",
+        "chart"
+      ],
+      "question": "Show the number of appointments in each month of 2023, in calendar order.",
+      "reference_sql": "SELECT DATE_FORMAT(appointment_date, '%Y-%m') AS month, COUNT(*) FROM appointments WHERE appointment_date >= '2023-01-01' AND appointment_date < '2024-01-01' GROUP BY DATE_FORMAT(appointment_date, '%Y-%m') ORDER BY month",
+      "order_matters": true,
+      "set": "quality_set"
+    },
+    {
+      "id": "q07",
+      "split": "heldout",
+      "tags": [
+        "relative_date"
+      ],
+      "question": "Which patients registered last year?",
+      "reference_sql": "SELECT patient_id, first_name, last_name FROM patients WHERE registration_date >= '2023-01-01' AND registration_date < '2024-01-01'",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q08",
+      "split": "dev",
+      "tags": [
+        "four_table_join"
+      ],
+      "question": "What is the total billed amount for each doctor specialization?",
+      "reference_sql": "SELECT d.specialization, SUM(b.amount) FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id GROUP BY d.specialization",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q09",
+      "split": "heldout",
+      "tags": [
+        "three_table_join"
+      ],
+      "question": "For patients insured by MedCare Plus, how many treatments of each treatment type did they receive?",
+      "reference_sql": "SELECT t.treatment_type, COUNT(*) FROM treatments AS t JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN patients AS p ON a.patient_id = p.patient_id WHERE p.insurance_provider = 'MedCare Plus' GROUP BY t.treatment_type",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q10",
+      "split": "dev",
+      "tags": [
+        "four_table_join",
+        "filter"
+      ],
+      "question": "What is the total amount of failed bills in each hospital branch?",
+      "reference_sql": "SELECT d.hospital_branch, SUM(b.amount) FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id WHERE b.payment_status = 'Failed' GROUP BY d.hospital_branch",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q11",
+      "split": "heldout",
+      "tags": [
+        "zero_count"
+      ],
+      "question": "How many appointments has each patient had? Include patients who have none.",
+      "reference_sql": "SELECT p.patient_id, COUNT(a.appointment_id) FROM patients AS p LEFT JOIN appointments AS a ON a.patient_id = p.patient_id GROUP BY p.patient_id",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q12",
+      "split": "dev",
+      "tags": [
+        "zero_count",
+        "filter_in_on"
+      ],
+      "question": "How many emergency appointments does each doctor have, including doctors with none?",
+      "reference_sql": "SELECT d.doctor_id, COUNT(a.appointment_id) FROM doctors AS d LEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id AND a.reason_for_visit = 'Emergency' GROUP BY d.doctor_id",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q13",
+      "split": "heldout",
+      "tags": [
+        "having",
+        "boundary"
+      ],
+      "question": "Which insurance providers cover more than 16 patients?",
+      "reference_sql": "SELECT insurance_provider FROM patients GROUP BY insurance_provider HAVING COUNT(*) > 16",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q14",
+      "split": "dev",
+      "tags": [
+        "distinct"
+      ],
+      "question": "How many different patients have at least one bill?",
+      "reference_sql": "SELECT COUNT(DISTINCT patient_id) FROM billing",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "q15",
+      "split": "heldout",
+      "tags": [
+        "aggregate"
+      ],
+      "question": "What is the average treatment cost for each treatment type, rounded to 2 decimals?",
+      "reference_sql": "SELECT treatment_type, ROUND(AVG(cost), 2) FROM treatments GROUP BY treatment_type",
+      "order_matters": false,
+      "set": "quality_set"
+    },
+    {
+      "id": "r13",
+      "split": "regression",
+      "tags": [
+        "chart_words"
+      ],
+      "question": "Show the number of appointments per status as a donut chart",
+      "reference_sql": "SELECT status, COUNT(*) FROM appointments GROUP BY status",
+      "order_matters": false,
+      "set": "regression_set"
+    },
+    {
+      "id": "g02",
+      "split": "fresh",
+      "tags": [
+        "chart_words"
+      ],
+      "question": "Pie chart of the number of bills by payment method please",
+      "reference_sql": "SELECT payment_method, COUNT(*) FROM billing GROUP BY payment_method",
+      "order_matters": false,
+      "set": "regression_set"
+    },
+    {
+      "id": "g08",
+      "split": "fresh",
+      "tags": [
+        "names"
+      ],
+      "question": "How many appointments did Dr. Robert have in 2023?",
+      "reference_sql": "SELECT COUNT(*) FROM appointments WHERE doctor_id = 'D007' AND appointment_date >= '2023-01-01' AND appointment_date < '2024-01-01'",
+      "order_matters": false,
+      "set": "regression_set"
+    },
+    {
+      "id": "i01",
+      "split": "fresh_round1",
+      "tags": [
+        "dates",
+        "status"
+      ],
+      "question": "How many cancelled appointments did each specialization have in the first half of 2023?",
+      "reference_sql": "SELECT d.specialization, COUNT(*) FROM appointments AS a JOIN doctors AS d ON a.doctor_id = d.doctor_id WHERE a.status = 'Cancelled' AND a.appointment_date >= '2023-01-01' AND a.appointment_date < '2023-07-01' GROUP BY d.specialization",
+      "order_matters": false,
+      "set": "intent_eval_set"
+    },
+    {
+      "id": "i04",
+      "split": "fresh_round1",
+      "tags": [
+        "date_column",
+        "individual_amounts"
+      ],
+      "question": "List the bills issued in October 2023 for Completed appointments, with each bill's amount.",
+      "reference_sql": "SELECT b.bill_id, b.amount FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id WHERE a.status = 'Completed' AND b.bill_date >= '2023-10-01' AND b.bill_date < '2023-11-01'",
+      "order_matters": false,
+      "set": "intent_eval_set"
+    },
+    {
+      "id": "i05",
+      "split": "fresh_round1",
+      "tags": [
+        "two_dates"
+      ],
+      "question": "How many patients registered in 2022 had at least one appointment in 2023?",
+      "reference_sql": "SELECT COUNT(DISTINCT p.patient_id) FROM patients AS p JOIN appointments AS a ON a.patient_id = p.patient_id WHERE p.registration_date >= '2022-01-01' AND p.registration_date < '2023-01-01' AND a.appointment_date >= '2023-01-01' AND a.appointment_date < '2024-01-01'",
+      "order_matters": false,
+      "set": "intent_eval_set"
+    },
+    {
+      "id": "i07",
+      "split": "fresh_round1",
+      "tags": [
+        "paraphrase",
+        "keep_all",
+        "names"
+      ],
+      "question": "Show every consultation of Dr. Linda Brown in Q3 2023 with the invoice amounts.",
+      "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.doctor_id = 'D008' AND a.appointment_date >= '2023-07-01' AND a.appointment_date < '2023-10-01'",
+      "order_matters": false,
+      "set": "intent_eval_set"
+    },
+    {
+      "id": "j01",
+      "split": "fresh_round2",
+      "tags": [
+        "billed_patient",
+        "attribute_path"
+      ],
+      "question": "What is the total paid amount per insurance provider of the billed patients?",
+      "reference_sql": "SELECT p.insurance_provider, SUM(b.amount) FROM billing AS b JOIN patients AS p ON b.patient_id = p.patient_id WHERE b.payment_status = 'Paid' GROUP BY p.insurance_provider",
+      "order_matters": false,
+      "set": "intent_eval_set"
+    },
+    {
+      "id": "j06",
+      "split": "fresh_round2",
+      "tags": [
+        "names",
+        "distinct"
+      ],
+      "question": "How many distinct patients had appointments with Dr. Sarah Taylor in 2023?",
+      "reference_sql": "SELECT COUNT(DISTINCT patient_id) FROM appointments WHERE doctor_id = 'D005' AND appointment_date >= '2023-01-01' AND appointment_date < '2024-01-01'",
+      "order_matters": false,
+      "set": "intent_eval_set"
+    },
+    {
+      "id": "x01",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "keep_all",
+        "names"
+      ],
+      "question": "all appointments with Dr. David Taylor for this month, including the patient's name, the invoice amount, and the hospital branch.",
+      "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.doctor_id = 'D001' AND a.appointment_date >= '2023-11-01' AND a.appointment_date < '2023-12-01'",
+      "order_matters": false,
+      "set": "examples_eval_set"
+    },
+    {
+      "id": "x02",
+      "split": "regression",
+      "tags": [
+        "observed",
+        "date_column"
+      ],
+      "question": "List only the appointments in November 2023 that have an invoice, with the invoice amount.",
+      "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a JOIN treatments AS t ON t.appointment_id = a.appointment_id JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.appointment_date >= '2023-11-01' AND a.appointment_date < '2023-12-01'",
+      "order_matters": false,
+      "set": "examples_eval_set"
+    },
+    {
+      "id": "n08",
+      "split": "new",
+      "tags": [
+        "billing_first",
+        "status"
+      ],
+      "question": "How much was billed in total for Completed appointments at each branch?",
+      "reference_sql": "SELECT d.hospital_branch, SUM(b.amount) FROM billing AS b JOIN treatments AS t ON b.treatment_id = t.treatment_id JOIN appointments AS a ON t.appointment_id = a.appointment_id JOIN doctors AS d ON a.doctor_id = d.doctor_id WHERE a.status = 'Completed' GROUP BY d.hospital_branch",
+      "order_matters": false,
+      "set": "examples_eval_set"
+    },
+    {
+      "id": "n09",
+      "split": "new",
+      "tags": [
+        "distinct",
+        "issue_date"
+      ],
+      "question": "Per payment method, how many different patients had bills issued in the second half of 2023?",
+      "reference_sql": "SELECT payment_method, COUNT(DISTINCT patient_id) FROM billing WHERE bill_date >= '2023-07-01' AND bill_date < '2024-01-01' GROUP BY payment_method",
+      "order_matters": false,
+      "set": "examples_eval_set"
+    },
+    {
+      "id": "n10",
+      "split": "new",
+      "tags": [
+        "keep_all",
+        "names"
+      ],
+      "question": "List all appointments of Dr. Sarah Smith in June 2023 with the patient name and the invoice amount.",
+      "reference_sql": "SELECT a.appointment_id, b.amount FROM appointments AS a LEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id LEFT JOIN billing AS b ON b.treatment_id = t.treatment_id WHERE a.doctor_id = 'D009' AND a.appointment_date >= '2023-06-01' AND a.appointment_date < '2023-07-01'",
+      "order_matters": false,
+      "set": "examples_eval_set"
+    }
+  ],
+  "items": [
+    {
+      "id": "dev-03",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows in the same order",
+      "sql": "SELECT treatment_type, AVG(cost) AS avg_cost\nFROM treatments\nGROUP BY treatment_type\nHAVING AVG(cost) > 500\nORDER BY avg_cost DESC;",
+      "generated_kind": "sql",
+      "seconds": 39.56,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "dev-03",
+      "config": "examples_only",
+      "verdict": "mismatch",
+      "detail": "model 5 row(s) x 2 col(s) vs reference 5 x 2",
+      "sql": "SELECT treatment_type, ROUND(AVG(cost), 2) AS average_cost\nFROM treatments\nGROUP BY treatment_type\nHAVING AVG(cost) > 500\nORDER BY average_cost DESC, treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 35.81,
+      "context_ids": [
+        "example:80",
+        "example:69",
+        "example:76",
+        "example:68",
+        "example:70"
+      ]
+    },
+    {
+      "id": "dev-03",
+      "config": "schema_plus_examples",
+      "verdict": "mismatch",
+      "detail": "model 5 row(s) x 2 col(s) vs reference 5 x 2",
+      "sql": "SELECT treatment_type, ROUND(AVG(cost), 2) AS average_cost\nFROM treatments\nGROUP BY treatment_type\nHAVING AVG(cost) > 500\nORDER BY average_cost DESC, treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 36.15,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:80",
+        "example:69",
+        "example:76",
+        "example:68",
+        "example:70"
+      ]
+    },
+    {
+      "id": "dev-03",
+      "config": "production",
+      "verdict": "mismatch",
+      "detail": "model 5 row(s) x 2 col(s) vs reference 5 x 2",
+      "sql": "SELECT treatment_type, ROUND(AVG(cost), 2) AS average_cost\nFROM treatments\nGROUP BY treatment_type\nHAVING AVG(cost) > 500\nORDER BY average_cost DESC, treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 23.26,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:80",
+        "example:69",
+        "example:76",
+        "example:68",
+        "example:70"
+      ]
+    },
+    {
+      "id": "dev-04",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT a.patient_id)\nFROM appointments a\nWHERE a.status = 'Cancelled';",
+      "generated_kind": "sql",
+      "seconds": 9.64,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "dev-04",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT patient_id) AS patient_count\nFROM appointments\nWHERE status = 'Cancelled';",
+      "generated_kind": "sql",
+      "seconds": 20.85,
+      "context_ids": [
+        "example:64",
+        "example:189",
+        "example:188",
+        "example:153",
+        "example:117"
+      ]
+    },
+    {
+      "id": "dev-04",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT patient_id) AS patient_count\nFROM appointments\nWHERE status = 'Cancelled';",
+      "generated_kind": "sql",
+      "seconds": 34.4,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:64",
+        "example:189",
+        "example:188",
+        "example:153",
+        "example:117"
+      ]
+    },
+    {
+      "id": "dev-04",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT patient_id) AS patient_count\nFROM appointments\nWHERE status = 'Cancelled';",
+      "generated_kind": "sql",
+      "seconds": 38.03,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:64",
+        "example:189",
+        "example:188",
+        "example:153",
+        "example:117"
+      ]
+    },
+    {
+      "id": "q01",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT appointment_id)\nFROM appointments\nWHERE appointment_date >= '2024-01-01' AND appointment_date < '2024-02-01';",
+      "generated_kind": "sql",
+      "seconds": 33.08,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q01",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT appointment_id) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2024-01-01'\n  AND appointment_date < '2024-02-01';",
+      "generated_kind": "sql",
+      "seconds": 31.46,
+      "context_ids": [
+        "example:172",
+        "example:49",
+        "example:54",
+        "example:51",
+        "example:162"
+      ]
+    },
+    {
+      "id": "q01",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT appointment_id) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2024-01-01'\n  AND appointment_date < '2024-02-01';",
+      "generated_kind": "sql",
+      "seconds": 48.9,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:172",
+        "example:49",
+        "example:54",
+        "example:51",
+        "example:162"
+      ]
+    },
+    {
+      "id": "q01",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT appointment_id) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2024-01-01'\n  AND appointment_date < '2024-02-01';",
+      "generated_kind": "sql",
+      "seconds": 46.88,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:172",
+        "example:49",
+        "example:54",
+        "example:51",
+        "example:162"
+      ]
+    },
+    {
+      "id": "q02",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT SUM(billing.amount) AS total_billed_amount\nFROM billing\nJOIN treatments ON billing.treatment_id = treatments.treatment_id\nJOIN appointments ON treatments.appointment_id = appointments.appointment_id\nWHERE billing.bill_date >= '2023-12-01' AND billing.bill_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 52.4,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q02",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT SUM(amount) AS total_billed\nFROM billing\nWHERE bill_date >= '2023-12-01'\n  AND bill_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 35.34,
+      "context_ids": [
+        "example:168",
+        "example:92",
+        "example:93",
+        "example:173",
+        "example:167"
+      ]
+    },
+    {
+      "id": "q02",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT SUM(amount) AS total_billed\nFROM billing\nWHERE bill_date >= '2023-12-01'\n  AND bill_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 47.48,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:168",
+        "example:92",
+        "example:93",
+        "example:173",
+        "example:167"
+      ]
+    },
+    {
+      "id": "q02",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT SUM(amount) AS total_billed\nFROM billing\nWHERE bill_date >= '2023-12-01'\n  AND bill_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 43.67,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:168",
+        "example:92",
+        "example:93",
+        "example:173",
+        "example:167"
+      ]
+    },
+    {
+      "id": "q03",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT t.treatment_id)\nFROM treatments t\nWHERE t.treatment_date >= '2023-03-01' AND t.treatment_date < '2023-04-01';",
+      "generated_kind": "sql",
+      "seconds": 31.2,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q03",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT treatment_id) AS treatment_count\nFROM treatments\nWHERE treatment_date >= '2023-03-01'\n  AND treatment_date < '2023-04-01';",
+      "generated_kind": "sql",
+      "seconds": 27.23,
+      "context_ids": [
+        "example:78",
+        "example:170",
+        "example:175",
+        "example:71",
+        "example:161"
+      ]
+    },
+    {
+      "id": "q03",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT treatment_id) AS treatment_count\nFROM treatments\nWHERE treatment_date >= '2023-03-01'\n  AND treatment_date < '2023-04-01';",
+      "generated_kind": "sql",
+      "seconds": 43.38,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:78",
+        "example:170",
+        "example:175",
+        "example:71",
+        "example:161"
+      ]
+    },
+    {
+      "id": "q03",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT treatment_id) AS treatment_count\nFROM treatments\nWHERE treatment_date >= '2023-03-01'\n  AND treatment_date < '2023-04-01';",
+      "generated_kind": "sql",
+      "seconds": 38.07,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:78",
+        "example:170",
+        "example:175",
+        "example:71",
+        "example:161"
+      ]
+    },
+    {
+      "id": "q04",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT a.appointment_id)\nFROM appointments a\nWHERE a.appointment_date >= '2023-04-01' AND a.appointment_date < '2023-07-01';",
+      "generated_kind": "sql",
+      "seconds": 29.65,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q04",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-04-01'\n  AND appointment_date < '2023-07-01';",
+      "generated_kind": "sql",
+      "seconds": 23.36,
+      "context_ids": [
+        "example:51",
+        "example:58",
+        "example:175",
+        "example:166",
+        "example:62"
+      ]
+    },
+    {
+      "id": "q04",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-04-01'\n  AND appointment_date < '2023-07-01';",
+      "generated_kind": "sql",
+      "seconds": 39.72,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:51",
+        "example:58",
+        "example:175",
+        "example:166",
+        "example:62"
+      ]
+    },
+    {
+      "id": "q04",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-04-01'\n  AND appointment_date < '2023-07-01';",
+      "generated_kind": "sql",
+      "seconds": 40.22,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:51",
+        "example:58",
+        "example:175",
+        "example:166",
+        "example:62"
+      ]
+    },
+    {
+      "id": "q05",
+      "config": "schema_only",
+      "verdict": "mismatch",
+      "detail": "model 1 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(DISTINCT bill_id)\nFROM billing\nWHERE bill_date >= '2023-03-15' AND bill_date < '2023-04-15';",
+      "generated_kind": "sql",
+      "seconds": 27.78,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q05",
+      "config": "examples_only",
+      "verdict": "mismatch",
+      "detail": "model 1 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2023-03-15'\n  AND bill_date < '2024-04-15';",
+      "generated_kind": "sql",
+      "seconds": 23.14,
+      "context_ids": [
+        "example:97",
+        "example:101",
+        "example:229",
+        "example:167",
+        "example:168"
+      ]
+    },
+    {
+      "id": "q05",
+      "config": "schema_plus_examples",
+      "verdict": "mismatch",
+      "detail": "model 1 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2023-03-15'\n  AND bill_date < '2024-04-15';",
+      "generated_kind": "sql",
+      "seconds": 38.61,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:97",
+        "example:101",
+        "example:229",
+        "example:167",
+        "example:168"
+      ]
+    },
+    {
+      "id": "q05",
+      "config": "production",
+      "verdict": "mismatch",
+      "detail": "model 1 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(*) AS bill_count\nFROM billing\nWHERE bill_date >= '2023-03-15'\n  AND bill_date < '2024-04-15';",
+      "generated_kind": "sql",
+      "seconds": 39.05,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:97",
+        "example:101",
+        "example:229",
+        "example:167",
+        "example:168"
+      ]
+    },
+    {
+      "id": "q06",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows in the same order",
+      "sql": "SELECT\n  DATE_FORMAT(appointment_date, '%Y-%m') AS month,\n  COUNT(DISTINCT appointment_id) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-01-01' AND appointment_date < '2024-01-01'\nGROUP BY DATE_FORMAT(appointment_date, '%Y-%m')\nORDER BY month ASC;",
+      "generated_kind": "sql",
+      "seconds": 37.97,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q06",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows in the same order",
+      "sql": "SELECT DATE_FORMAT(appointment_date, '%Y-%m') AS appointment_month, COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-01-01'\n  AND appointment_date < '2024-01-01'\nGROUP BY DATE_FORMAT(appointment_date, '%Y-%m')\nORDER BY appointment_month;",
+      "generated_kind": "sql",
+      "seconds": 31.16,
+      "context_ids": [
+        "example:49",
+        "example:175",
+        "example:54",
+        "example:162",
+        "example:51"
+      ]
+    },
+    {
+      "id": "q06",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows in the same order",
+      "sql": "SELECT DATE_FORMAT(appointment_date, '%Y-%m') AS appointment_month, COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-01-01'\n  AND appointment_date < '2024-01-01'\nGROUP BY DATE_FORMAT(appointment_date, '%Y-%m')\nORDER BY appointment_month;",
+      "generated_kind": "sql",
+      "seconds": 45.91,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:49",
+        "example:175",
+        "example:54",
+        "example:162",
+        "example:51"
+      ]
+    },
+    {
+      "id": "q06",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows in the same order",
+      "sql": "SELECT DATE_FORMAT(appointment_date, '%Y-%m') AS appointment_month, COUNT(*) AS appointment_count\nFROM appointments\nWHERE appointment_date >= '2023-01-01'\n  AND appointment_date < '2024-01-01'\nGROUP BY DATE_FORMAT(appointment_date, '%Y-%m')\nORDER BY appointment_month;",
+      "generated_kind": "sql",
+      "seconds": 53.19,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:49",
+        "example:175",
+        "example:54",
+        "example:162",
+        "example:51"
+      ]
+    },
+    {
+      "id": "q07",
+      "config": "schema_only",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [patient_id, first_name, last_name]; model returned 11 columns",
+      "sql": "SELECT patient_id, first_name, last_name, gender, date_of_birth, contact_number, address, registration_date, insurance_provider, insurance_number, email\nFROM patients\nWHERE registration_date >= '2023-01-01' AND registration_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 35.17,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q07",
+      "config": "examples_only",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [patient_id, first_name, last_name]; model returned 4 columns",
+      "sql": "SELECT patient_id, first_name, last_name, registration_date\nFROM patients\nWHERE registration_date >= '2023-01-01'\n  AND registration_date < '2024-01-01'\nORDER BY registration_date, patient_id;",
+      "generated_kind": "sql",
+      "seconds": 25.99,
+      "context_ids": [
+        "example:4",
+        "example:176",
+        "example:133",
+        "example:18",
+        "example:5"
+      ]
+    },
+    {
+      "id": "q07",
+      "config": "schema_plus_examples",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [patient_id, first_name, last_name]; model returned 4 columns",
+      "sql": "SELECT patient_id, first_name, last_name, registration_date\nFROM patients\nWHERE registration_date >= '2023-01-01'\n  AND registration_date < '2024-01-01'\nORDER BY registration_date, patient_id;",
+      "generated_kind": "sql",
+      "seconds": 38.4,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:4",
+        "example:176",
+        "example:133",
+        "example:18",
+        "example:5"
+      ]
+    },
+    {
+      "id": "q07",
+      "config": "production",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [patient_id, first_name, last_name]; model returned 4 columns",
+      "sql": "SELECT patient_id, first_name, last_name, registration_date\nFROM patients\nWHERE registration_date >= '2023-01-01'\n  AND registration_date < '2024-01-01'\nORDER BY registration_date, patient_id;",
+      "generated_kind": "sql",
+      "seconds": 28.97,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:4",
+        "example:176",
+        "example:133",
+        "example:18",
+        "documentation:patients"
+      ]
+    },
+    {
+      "id": "q08",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT doctors.specialization, SUM(billing.amount) AS total_billed_amount\nFROM doctors\nJOIN appointments ON appointments.doctor_id = doctors.doctor_id\nJOIN treatments ON treatments.appointment_id = appointments.appointment_id\nJOIN billing ON billing.treatment_id = treatments.treatment_id\nGROUP BY doctors.specialization;",
+      "generated_kind": "sql",
+      "seconds": 16.68,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q08",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT d.specialization, SUM(b.amount) AS total_billed\nFROM billing AS b\nJOIN treatments AS t ON b.treatment_id = t.treatment_id\nJOIN appointments AS a ON t.appointment_id = a.appointment_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nGROUP BY d.specialization\nORDER BY d.specialization;",
+      "generated_kind": "sql",
+      "seconds": 29.65,
+      "context_ids": [
+        "example:200",
+        "example:149",
+        "example:131",
+        "example:232",
+        "example:219"
+      ]
+    },
+    {
+      "id": "q08",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3594 tokens (estimated, 8823 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:200",
+        "example:149",
+        "example:131",
+        "example:232",
+        "example:219"
+      ]
+    },
+    {
+      "id": "q08",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3618 tokens (estimated, 8884 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:200",
+        "example:149",
+        "example:131",
+        "example:232",
+        "example:219"
+      ]
+    },
+    {
+      "id": "q09",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT treatments.treatment_type, COUNT(DISTINCT treatments.appointment_id) AS treatment_count\nFROM treatments\nJOIN appointments ON treatments.appointment_id = appointments.appointment_id\nJOIN patients ON appointments.patient_id = patients.patient_id\nWHERE patients.insurance_provider = 'MedCare Plus'\nGROUP BY treatments.treatment_type\nORDER BY treatment_count DESC;",
+      "generated_kind": "sql",
+      "seconds": 36.59,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q09",
+      "config": "examples_only",
+      "verdict": "rejected",
+      "detail": "unknown_column",
+      "sql": "SELECT treatment_type, COUNT(DISTINCT t.patient_id) AS treatment_count\nFROM treatments t\nJOIN patients p ON t.patient_id = p.patient_id\nWHERE p.insurance = 'MedCare Plus'\nGROUP BY treatment_type\nORDER BY treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 22.29,
+      "context_ids": [
+        "example:72",
+        "example:106",
+        "example:76",
+        "example:79",
+        "example:74"
+      ]
+    },
+    {
+      "id": "q09",
+      "config": "schema_plus_examples",
+      "verdict": "rejected",
+      "detail": "unknown_column",
+      "sql": "SELECT t.treatment_type, COUNT(DISTINCT t.patient_id) AS treatment_count\nFROM treatments t\nJOIN billing b ON t.treatment_id = b.treatment_id\nJOIN patients p ON b.patient_id = p.patient_id\nWHERE p.insurance_provider = 'MedCare Plus'\nGROUP BY t.treatment_type\nORDER BY t.treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 42.07,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:72",
+        "example:106",
+        "example:76",
+        "example:79",
+        "example:74"
+      ]
+    },
+    {
+      "id": "q09",
+      "config": "production",
+      "verdict": "rejected",
+      "detail": "unknown_column",
+      "sql": "SELECT t.treatment_type, COUNT(DISTINCT t.patient_id) AS treatment_count\nFROM treatments t\nJOIN billing b ON t.treatment_id = b.treatment_id\nJOIN patients p ON b.patient_id = p.patient_id\nWHERE p.insurance_provider = 'MedCare Plus'\nGROUP BY t.treatment_type\nORDER BY t.treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 29.23,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:72",
+        "example:106",
+        "example:76",
+        "example:79",
+        "example:74"
+      ]
+    },
+    {
+      "id": "q10",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT SUM(billing.amount) AS total_amount, doctors.hospital_branch\nFROM billing\nJOIN treatments ON billing.treatment_id = treatments.treatment_id\nJOIN appointments ON treatments.appointment_id = appointments.appointment_id\nJOIN doctors ON appointments.doctor_id = doctors.doctor_id\nWHERE billing.payment_status = 'Failed'\nGROUP BY doctors.hospital_branch;",
+      "generated_kind": "sql",
+      "seconds": 26.11,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q10",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT d.hospital_branch, SUM(b.amount) AS total_failed_amount\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE b.payment_status = 'Failed'\nGROUP BY d.hospital_branch\nORDER BY d.hospital_branch;",
+      "generated_kind": "sql",
+      "seconds": 30.65,
+      "context_ids": [
+        "example:91",
+        "example:140",
+        "example:200",
+        "example:89",
+        "example:217"
+      ]
+    },
+    {
+      "id": "q10",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT d.hospital_branch, SUM(b.amount) AS total_failed_amount\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE b.payment_status = 'Failed'\nGROUP BY d.hospital_branch\nORDER BY d.hospital_branch;",
+      "generated_kind": "sql",
+      "seconds": 49.84,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:91",
+        "example:140",
+        "example:200",
+        "example:89",
+        "example:217"
+      ]
+    },
+    {
+      "id": "q10",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT d.hospital_branch, SUM(b.amount) AS total_failed_amount\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE b.payment_status = 'Failed'\nGROUP BY d.hospital_branch\nORDER BY d.hospital_branch;",
+      "generated_kind": "sql",
+      "seconds": 48.84,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:91",
+        "example:140",
+        "example:200",
+        "example:89",
+        "example:217"
+      ]
+    },
+    {
+      "id": "q11",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT patients.patient_id, COUNT(DISTINCT appointments.appointment_id) AS appointment_count\nFROM patients\nLEFT JOIN appointments ON appointments.patient_id = patients.patient_id\nGROUP BY patients.patient_id\nORDER BY appointment_count DESC;",
+      "generated_kind": "sql",
+      "seconds": 26.6,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q11",
+      "config": "examples_only",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [patient_id, appointment_count]; model returned 4 columns",
+      "sql": "SELECT p.patient_id, p.first_name, p.last_name,\n       COUNT(a.appointment_id) AS appointment_count\nFROM patients AS p\nLEFT JOIN appointments AS a\n    ON a.patient_id = p.patient_id\nGROUP BY p.patient_id, p.first_name, p.last_name\nORDER BY p.patient_id;",
+      "generated_kind": "sql",
+      "seconds": 28.56,
+      "context_ids": [
+        "example:144",
+        "example:115",
+        "example:57",
+        "example:153",
+        "example:141"
+      ]
+    },
+    {
+      "id": "q11",
+      "config": "schema_plus_examples",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [patient_id, appointment_count]; model returned 4 columns",
+      "sql": "SELECT p.patient_id, p.first_name, p.last_name, COUNT(a.appointment_id) AS appointment_count\nFROM patients AS p\nLEFT JOIN appointments AS a ON a.patient_id = p.patient_id\nGROUP BY p.patient_id, p.first_name, p.last_name\nORDER BY p.patient_id;",
+      "generated_kind": "sql",
+      "seconds": 39.1,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:144",
+        "example:115",
+        "example:57",
+        "example:153",
+        "example:141"
+      ]
+    },
+    {
+      "id": "q11",
+      "config": "production",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [patient_id, appointment_count]; model returned 4 columns",
+      "sql": "SELECT p.patient_id, p.first_name, p.last_name, COUNT(a.appointment_id) AS appointment_count\nFROM patients AS p\nLEFT JOIN appointments AS a ON a.patient_id = p.patient_id\nGROUP BY p.patient_id, p.first_name, p.last_name\nORDER BY p.patient_id;",
+      "generated_kind": "sql",
+      "seconds": 38.4,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:144",
+        "example:115",
+        "example:57",
+        "example:153",
+        "example:141"
+      ]
+    },
+    {
+      "id": "q12",
+      "config": "schema_only",
+      "verdict": "mismatch",
+      "detail": "model 9 row(s) x 2 col(s) vs reference 10 x 2",
+      "sql": "SELECT doctors.doctor_id, COUNT(DISTINCT appointments.appointment_id) AS emergency_appointment_count\nFROM doctors\nLEFT JOIN appointments ON doctors.doctor_id = appointments.doctor_id\nWHERE appointments.reason_for_visit = 'Emergency'\nGROUP BY doctors.doctor_id\nORDER BY doctors.doctor_id;",
+      "generated_kind": "sql",
+      "seconds": 28.81,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q12",
+      "config": "examples_only",
+      "verdict": "mismatch",
+      "detail": "model 9 row(s) x 4 col(s) vs reference 10 x 2",
+      "sql": "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS emergency_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nWHERE a.reason_for_visit = 'Emergency'\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;",
+      "generated_kind": "sql",
+      "seconds": 29.44,
+      "context_ids": [
+        "example:141",
+        "example:129",
+        "example:156",
+        "example:190",
+        "example:182"
+      ]
+    },
+    {
+      "id": "q12",
+      "config": "schema_plus_examples",
+      "verdict": "mismatch",
+      "detail": "model 9 row(s) x 4 col(s) vs reference 10 x 2",
+      "sql": "SELECT d.doctor_id, d.first_name, d.last_name, COUNT(a.appointment_id) AS emergency_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nWHERE a.reason_for_visit = 'Emergency'\nGROUP BY d.doctor_id, d.first_name, d.last_name\nORDER BY d.doctor_id;",
+      "generated_kind": "sql",
+      "seconds": 44.99,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:141",
+        "example:129",
+        "example:156",
+        "example:190",
+        "example:182"
+      ]
+    },
+    {
+      "id": "q12",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3606 tokens (estimated, 8855 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:141",
+        "example:129",
+        "example:156",
+        "example:190",
+        "example:182"
+      ]
+    },
+    {
+      "id": "q13",
+      "config": "schema_only",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [insurance_provider]; model returned 2 columns",
+      "sql": "SELECT insurance_provider, COUNT(DISTINCT patient_id) AS patient_count\nFROM patients\nGROUP BY insurance_provider\nHAVING COUNT(DISTINCT patient_id) > 16\nORDER BY patient_count DESC;",
+      "generated_kind": "sql",
+      "seconds": 24.71,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q13",
+      "config": "examples_only",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [provider]; model returned 2 columns",
+      "sql": "SELECT TRIM(p.insurance_provider) AS provider, COUNT(DISTINCT p.patient_id) AS patient_count\nFROM patients AS p\nWHERE TRIM(p.insurance_provider) IS NOT NULL\n  AND TRIM(p.insurance_provider) <> ''\nGROUP BY TRIM(p.insurance_provider)\nHAVING COUNT(DISTINCT p.patient_id) > 16\nORDER BY patient_count DESC, provider;",
+      "generated_kind": "sql",
+      "seconds": 29.79,
+      "context_ids": [
+        "example:20",
+        "example:16",
+        "example:225",
+        "example:115",
+        "example:134"
+      ]
+    },
+    {
+      "id": "q13",
+      "config": "schema_plus_examples",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [insurance_provider]; model returned 2 columns",
+      "sql": "SELECT p.insurance_provider, COUNT(DISTINCT p.patient_id) AS patient_count\nFROM patients AS p\nGROUP BY p.insurance_provider\nHAVING COUNT(DISTINCT p.patient_id) > 16\nORDER BY patient_count DESC, p.insurance_provider;",
+      "generated_kind": "sql",
+      "seconds": 37.26,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:20",
+        "example:16",
+        "example:225",
+        "example:115",
+        "example:134"
+      ]
+    },
+    {
+      "id": "q13",
+      "config": "production",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [insurance_provider]; model returned 2 columns",
+      "sql": "SELECT p.insurance_provider, COUNT(DISTINCT p.patient_id) AS patient_count\nFROM patients AS p\nGROUP BY p.insurance_provider\nHAVING COUNT(DISTINCT p.patient_id) > 16\nORDER BY patient_count DESC, p.insurance_provider;",
+      "generated_kind": "sql",
+      "seconds": 36.51,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:20",
+        "example:16",
+        "example:225",
+        "example:115",
+        "example:134"
+      ]
+    },
+    {
+      "id": "q14",
+      "config": "schema_only",
+      "verdict": "mismatch",
+      "detail": "model 1 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(DISTINCT b.patient_id)\nFROM billing b\nWHERE b.bill_date >= '2024-01-01' AND b.bill_date < '2025-01-01';",
+      "generated_kind": "sql",
+      "seconds": 25.5,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q14",
+      "config": "examples_only",
+      "verdict": "mismatch",
+      "detail": "model 48 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(DISTINCT b.patient_id) AS patient_count\nFROM billing AS b\nGROUP BY b.patient_id;",
+      "generated_kind": "sql",
+      "seconds": 14.02,
+      "context_ids": [
+        "example:225",
+        "example:106",
+        "example:99",
+        "example:224",
+        "example:154"
+      ]
+    },
+    {
+      "id": "q14",
+      "config": "schema_plus_examples",
+      "verdict": "mismatch",
+      "detail": "model 48 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(DISTINCT b.patient_id) AS patient_count\nFROM billing AS b\nGROUP BY b.patient_id;",
+      "generated_kind": "sql",
+      "seconds": 27.3,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:225",
+        "example:106",
+        "example:99",
+        "example:224",
+        "example:154"
+      ]
+    },
+    {
+      "id": "q14",
+      "config": "production",
+      "verdict": "mismatch",
+      "detail": "model 48 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(DISTINCT b.patient_id) AS patient_count\nFROM billing AS b\nGROUP BY b.patient_id;",
+      "generated_kind": "sql",
+      "seconds": 15.3,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:225",
+        "example:106",
+        "example:99",
+        "example:224",
+        "example:154"
+      ]
+    },
+    {
+      "id": "q15",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT treatment_type, ROUND(AVG(cost), 2) AS avg_cost\nFROM treatments\nGROUP BY treatment_type\nORDER BY avg_cost DESC;",
+      "generated_kind": "sql",
+      "seconds": 7.8,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "q15",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT treatment_type, ROUND(AVG(cost), 2) AS average_cost\nFROM treatments\nGROUP BY treatment_type\nORDER BY average_cost DESC, treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 15.24,
+      "context_ids": [
+        "example:80",
+        "example:76",
+        "example:74",
+        "example:69",
+        "example:193"
+      ]
+    },
+    {
+      "id": "q15",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT treatment_type, ROUND(AVG(cost), 2) AS average_cost\nFROM treatments\nGROUP BY treatment_type\nORDER BY average_cost DESC, treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 29.04,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:80",
+        "example:76",
+        "example:74",
+        "example:69",
+        "example:193"
+      ]
+    },
+    {
+      "id": "q15",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT treatment_type, ROUND(AVG(cost), 2) AS average_cost\nFROM treatments\nGROUP BY treatment_type\nORDER BY average_cost DESC, treatment_type;",
+      "generated_kind": "sql",
+      "seconds": 17.05,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:80",
+        "example:76",
+        "example:74",
+        "example:69",
+        "example:193"
+      ]
+    },
+    {
+      "id": "r13",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT status, COUNT(*) AS appointment_count\nFROM appointments\nGROUP BY status\nORDER BY appointment_count DESC;",
+      "generated_kind": "sql",
+      "seconds": 7.38,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "r13",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT status, COUNT(*) AS appointment_count\nFROM appointments\nGROUP BY status\nORDER BY status;",
+      "generated_kind": "sql",
+      "seconds": 12.3,
+      "context_ids": [
+        "example:112",
+        "example:114",
+        "example:119",
+        "example:53",
+        "example:226"
+      ]
+    },
+    {
+      "id": "r13",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT status, COUNT(*) AS appointment_count\nFROM appointments\nGROUP BY status\nORDER BY status;",
+      "generated_kind": "sql",
+      "seconds": 26.53,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:112",
+        "example:114",
+        "example:119",
+        "example:53",
+        "example:226"
+      ]
+    },
+    {
+      "id": "r13",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT status, COUNT(*) AS appointment_count\nFROM appointments\nGROUP BY status\nORDER BY status;",
+      "generated_kind": "sql",
+      "seconds": 14.62,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:112",
+        "example:114",
+        "example:119",
+        "example:53",
+        "example:226"
+      ]
+    },
+    {
+      "id": "g02",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT payment_method, COUNT(*) AS bill_count\nFROM billing\nGROUP BY payment_method\nORDER BY bill_count DESC;",
+      "generated_kind": "sql",
+      "seconds": 6.83,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "g02",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT payment_method, COUNT(*) AS bill_count\nFROM billing\nGROUP BY payment_method\nORDER BY payment_method;",
+      "generated_kind": "sql",
+      "seconds": 13.07,
+      "context_ids": [
+        "example:88",
+        "example:94",
+        "example:95",
+        "example:90",
+        "example:231"
+      ]
+    },
+    {
+      "id": "g02",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT payment_method, COUNT(*) AS bill_count\nFROM billing\nGROUP BY payment_method\nORDER BY payment_method;",
+      "generated_kind": "sql",
+      "seconds": 26.86,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:88",
+        "example:94",
+        "example:95",
+        "example:90",
+        "example:231"
+      ]
+    },
+    {
+      "id": "g02",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT payment_method, COUNT(*) AS bill_count\nFROM billing\nGROUP BY payment_method\nORDER BY payment_method;",
+      "generated_kind": "sql",
+      "seconds": 15.98,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:88",
+        "example:94",
+        "example:95",
+        "example:90",
+        "example:231"
+      ]
+    },
+    {
+      "id": "g08",
+      "config": "schema_only",
+      "verdict": "mismatch",
+      "detail": "model 1 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(DISTINCT a.appointment_id)\nFROM appointments a\nJOIN doctors d ON a.doctor_id = d.doctor_id\nWHERE d.first_name = 'Robert'\n  AND d.last_name = 'Smith'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 25.66,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "g08",
+      "config": "examples_only",
+      "verdict": "mismatch",
+      "detail": "model 0 row(s) x 1 col(s) vs reference 1 x 1",
+      "sql": "SELECT COUNT(DISTINCT a.appointment_id) AS appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nWHERE d.first_name = 'Robert'\n  AND d.last_name = 'Dr.'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01'\nGROUP BY d.doctor_id, d.first_name, d.last_name;",
+      "generated_kind": "sql",
+      "seconds": 37.74,
+      "context_ids": [
+        "example:245",
+        "example:238",
+        "example:144",
+        "example:166",
+        "example:177"
+      ]
+    },
+    {
+      "id": "g08",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3611 tokens (estimated, 8866 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:245",
+        "example:238",
+        "example:144",
+        "example:166",
+        "example:177"
+      ]
+    },
+    {
+      "id": "g08",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3635 tokens (estimated, 8927 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:245",
+        "example:238",
+        "example:144",
+        "example:166",
+        "example:177"
+      ]
+    },
+    {
+      "id": "i01",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT doctors.specialization, COUNT(DISTINCT appointments.appointment_id) AS cancelled_appointments\nFROM appointments\nJOIN doctors ON appointments.doctor_id = doctors.doctor_id\nWHERE appointments.status = 'Cancelled'\n  AND appointments.appointment_date >= '2023-01-01'\n  AND appointments.appointment_date < '2023-07-01'\nGROUP BY doctors.specialization\nORDER BY cancelled_appointments DESC;",
+      "generated_kind": "sql",
+      "seconds": 26.08,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "i01",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT d.specialization, COUNT(CASE WHEN a.status = 'Cancelled' THEN 1 END) AS cancelled_appointment_count\nFROM doctors AS d\nLEFT JOIN appointments AS a ON a.doctor_id = d.doctor_id\nWHERE a.appointment_date >= '2023-01-01' AND a.appointment_date < '2023-07-01'\nGROUP BY d.specialization\nORDER BY d.specialization;",
+      "generated_kind": "sql",
+      "seconds": 36.07,
+      "context_ids": [
+        "example:181",
+        "example:148",
+        "example:238",
+        "example:129",
+        "example:245"
+      ]
+    },
+    {
+      "id": "i01",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3710 tokens (estimated, 9113 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:181",
+        "example:148",
+        "example:238",
+        "example:129",
+        "example:245"
+      ]
+    },
+    {
+      "id": "i01",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3734 tokens (estimated, 9174 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:181",
+        "example:148",
+        "example:238",
+        "example:129",
+        "example:245"
+      ]
+    },
+    {
+      "id": "i04",
+      "config": "schema_only",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [bill_id, patient_id]; model returned 7 columns",
+      "sql": "SELECT b.bill_id, b.patient_id, b.treatment_id, b.bill_date, b.amount, b.payment_method, b.payment_status\nFROM billing b\nJOIN treatments t ON b.treatment_id = t.treatment_id\nJOIN appointments a ON t.appointment_id = a.appointment_id\nWHERE b.bill_date >= '2023-10-01' AND b.bill_date < '2023-11-01'\n  AND a.status = 'Completed';",
+      "generated_kind": "sql",
+      "seconds": 31.49,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "i04",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT b.bill_id, b.amount\nFROM billing AS b\nJOIN treatments AS t ON b.treatment_id = t.treatment_id\nJOIN appointments AS a ON t.appointment_id = a.appointment_id\nWHERE b.bill_date >= '2023-10-01'\n  AND b.bill_date < '2023-11-01'\n  AND a.status = 'Completed'\nORDER BY b.bill_id;",
+      "generated_kind": "sql",
+      "seconds": 36.18,
+      "context_ids": [
+        "example:210",
+        "example:248",
+        "example:97",
+        "example:101",
+        "example:204"
+      ]
+    },
+    {
+      "id": "i04",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3615 tokens (estimated, 8877 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:210",
+        "example:248",
+        "example:97",
+        "example:101",
+        "example:204"
+      ]
+    },
+    {
+      "id": "i04",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3640 tokens (estimated, 8938 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:210",
+        "example:248",
+        "example:97",
+        "example:101",
+        "example:204"
+      ]
+    },
+    {
+      "id": "i05",
+      "config": "schema_only",
+      "verdict": "rejected",
+      "detail": "unsupported_construct",
+      "sql": "SELECT COUNT(DISTINCT p.patient_id)\nFROM patients p\nWHERE p.registration_date >= '2022-01-01' AND p.registration_date < '2023-01-01'\n  AND EXISTS (\n    SELECT 1\n    FROM appointments a\n    WHERE a.patient_id = p.patient_id\n      AND a.appointment_date >= '2023-01-01' AND a.appointment_date < '2024-01-01'\n  );",
+      "generated_kind": "sql",
+      "seconds": 33.24,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "i05",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT p.patient_id) AS patient_count\nFROM patients AS p\nJOIN appointments AS a ON a.patient_id = p.patient_id\nWHERE p.registration_date >= '2022-01-01'\n  AND p.registration_date < '2023-01-01'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 34.48,
+      "context_ids": [
+        "example:133",
+        "example:144",
+        "example:4",
+        "example:176",
+        "example:237"
+      ]
+    },
+    {
+      "id": "i05",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT p.patient_id) AS patient_count\nFROM patients AS p\nJOIN appointments AS a ON a.patient_id = p.patient_id\nWHERE p.registration_date >= '2022-01-01'\n  AND p.registration_date < '2023-01-01'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 47.89,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:133",
+        "example:144",
+        "example:4",
+        "example:176",
+        "example:237"
+      ]
+    },
+    {
+      "id": "i05",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT p.patient_id) AS patient_count\nFROM patients AS p\nJOIN appointments AS a ON a.patient_id = p.patient_id\nWHERE p.registration_date >= '2022-01-01'\n  AND p.registration_date < '2023-01-01'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 46.97,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:133",
+        "example:144",
+        "example:4",
+        "example:176",
+        "example:237"
+      ]
+    },
+    {
+      "id": "i07",
+      "config": "schema_only",
+      "verdict": "mismatch",
+      "detail": "model 0 row(s) x 17 col(s) vs reference 6 x 2",
+      "sql": "SELECT a.appointment_id, a.patient_id, p.first_name, p.last_name, a.doctor_id, d.first_name AS doctor_first_name, d.last_name AS doctor_last_name, a.appointment_date, a.appointment_time, a.reason_for_visit, t.treatment_type, t.cost, b.bill_id, b.amount, b.bill_date, b.payment_method, b.payment_status\nFROM appointments a\nJOIN patients p ON a.patient_id = p.patient_id\nJOIN doctors d ON a.doctor_id = d.doctor_id\nJOIN treatments t ON a.appointment_id = t.appointment_id\nJOIN billing b ON t.treatment_id = b.treatment_id\nWHERE a.doctor_id = 'Linda Brown'\n  AND a.appointment_date >= '2023-07-01'\n  AND a.appointment_date < '2023-10-01'\nORDER BY a.appointment_date, b.bill_date;",
+      "generated_kind": "sql",
+      "seconds": 55.61,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "i07",
+      "config": "examples_only",
+      "verdict": "mismatch",
+      "detail": "model 0 row(s) x 6 col(s) vs reference 6 x 2",
+      "sql": "SELECT a.appointment_id, a.appointment_date,\n       CONCAT(p.first_name, ' ', p.last_name) AS patient_name,\n       t.treatment_id, b.bill_id, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE d.doctor_id = 'D004'\n  AND a.appointment_date >= '2023-07-01'\n  AND a.appointment_date < '2023-08-01'\nORDER BY a.appointment_date, a.appointment_id, t.treatment_id, b.bill_id;",
+      "generated_kind": "sql",
+      "seconds": 56.56,
+      "context_ids": [
+        "example:248",
+        "example:249",
+        "example:204",
+        "example:203",
+        "example:62"
+      ]
+    },
+    {
+      "id": "i07",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3756 tokens (estimated, 9230 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:248",
+        "example:249",
+        "example:204",
+        "example:203",
+        "example:62"
+      ]
+    },
+    {
+      "id": "i07",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 4167 tokens (estimated, 10256 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context ",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:248",
+        "example:249",
+        "example:204",
+        "documentation:appointments-with-their-bills",
+        "example:203"
+      ]
+    },
+    {
+      "id": "j01",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT SUM(b.amount) AS total_paid_amount, p.insurance_provider\nFROM patients p\nJOIN billing b ON p.patient_id = b.patient_id\nWHERE b.payment_status = 'Paid'\nGROUP BY p.insurance_provider\nORDER BY total_paid_amount DESC;",
+      "generated_kind": "sql",
+      "seconds": 14.27,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "j01",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT p.insurance_provider, SUM(b.amount) AS total_paid\nFROM billing AS b\nJOIN patients AS p ON b.patient_id = p.patient_id\nWHERE b.payment_status = 'Paid'\nGROUP BY p.insurance_provider\nORDER BY p.insurance_provider;",
+      "generated_kind": "sql",
+      "seconds": 23.78,
+      "context_ids": [
+        "example:123",
+        "example:124",
+        "example:140",
+        "example:200",
+        "example:149"
+      ]
+    },
+    {
+      "id": "j01",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT p.insurance_provider, SUM(b.amount) AS total_paid\nFROM billing AS b\nJOIN patients AS p ON b.patient_id = p.patient_id\nWHERE b.payment_status = 'Paid'\nGROUP BY p.insurance_provider\nORDER BY p.insurance_provider;",
+      "generated_kind": "sql",
+      "seconds": 36.66,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:123",
+        "example:124",
+        "example:140",
+        "example:200",
+        "example:149"
+      ]
+    },
+    {
+      "id": "j01",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT p.insurance_provider, SUM(b.amount) AS total_paid\nFROM billing AS b\nJOIN patients AS p ON b.patient_id = p.patient_id\nWHERE b.payment_status = 'Paid'\nGROUP BY p.insurance_provider\nORDER BY p.insurance_provider;",
+      "generated_kind": "sql",
+      "seconds": 36.95,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:123",
+        "example:124",
+        "example:140",
+        "example:200",
+        "example:149"
+      ]
+    },
+    {
+      "id": "j06",
+      "config": "schema_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT a.patient_id)\nFROM appointments a\nJOIN doctors d ON a.doctor_id = d.doctor_id\nWHERE d.first_name = 'Sarah' AND d.last_name = 'Taylor'\n  AND a.appointment_date >= '2023-01-01' AND a.appointment_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 33.46,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "j06",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT p.patient_id) AS patient_count\nFROM patients AS p\nJOIN appointments AS a ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nWHERE d.first_name = 'Sarah'\n  AND d.last_name = 'Taylor'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 33.23,
+      "context_ids": [
+        "example:188",
+        "example:133",
+        "example:144",
+        "example:156",
+        "example:115"
+      ]
+    },
+    {
+      "id": "j06",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT a.patient_id) AS patient_count\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nWHERE d.first_name = 'Sarah'\n  AND d.last_name = 'Taylor'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 47.39,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:188",
+        "example:133",
+        "example:144",
+        "example:156",
+        "example:115"
+      ]
+    },
+    {
+      "id": "j06",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT COUNT(DISTINCT a.patient_id) AS patient_count\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nWHERE d.first_name = 'Sarah'\n  AND d.last_name = 'Taylor'\n  AND a.appointment_date >= '2023-01-01'\n  AND a.appointment_date < '2024-01-01';",
+      "generated_kind": "sql",
+      "seconds": 48.64,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:188",
+        "example:133",
+        "example:144",
+        "example:156",
+        "example:115"
+      ]
+    },
+    {
+      "id": "x01",
+      "config": "schema_only",
+      "verdict": "mismatch",
+      "detail": "model 0 row(s) x 5 col(s) vs reference 3 x 2",
+      "sql": "SELECT a.appointment_id, p.first_name, p.last_name, b.amount, d.hospital_branch\nFROM appointments a\nJOIN patients p ON a.patient_id = p.patient_id\nJOIN doctors d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments t ON a.appointment_id = t.appointment_id\nLEFT JOIN billing b ON t.treatment_id = b.treatment_id\nWHERE d.first_name = 'David' AND d.last_name = 'Taylor'\n  AND a.appointment_date >= '2024-01-01' AND a.appointment_date < '2024-02-01'\nORDER BY a.appointment_id;",
+      "generated_kind": "sql",
+      "seconds": 44.79,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "x01",
+      "config": "examples_only",
+      "verdict": "mismatch",
+      "detail": "model 0 row(s) x 7 col(s) vs reference 3 x 2",
+      "sql": "SELECT a.appointment_id, a.appointment_date,\n       CONCAT(p.first_name, ' ', p.last_name) AS patient_name,\n       d.hospital_branch, t.treatment_id, b.bill_id, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE d.first_name = 'David'\n  AND d.last_name = 'Taylor'\n  AND a.appointment_date >= '2024-01-01'\n  AND a.appointment_date < '2024-02-01'\nORDER BY a.appointment_date, a.appointment_id, t.treatment_id, b.bill_id;",
+      "generated_kind": "sql",
+      "seconds": 54.73,
+      "context_ids": [
+        "example:203",
+        "example:243",
+        "example:202",
+        "example:201",
+        "example:204"
+      ]
+    },
+    {
+      "id": "x01",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3989 tokens (estimated, 9812 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:203",
+        "example:243",
+        "example:202",
+        "example:201",
+        "example:204"
+      ]
+    },
+    {
+      "id": "x01",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 4014 tokens (estimated, 9873 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:203",
+        "example:243",
+        "example:202",
+        "example:201",
+        "example:204"
+      ]
+    },
+    {
+      "id": "x02",
+      "config": "schema_only",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [appointment_id, amount]; model returned 5 columns",
+      "sql": "SELECT a.appointment_id, a.patient_id, a.doctor_id, a.appointment_date, b.amount\nFROM appointments a\nLEFT JOIN treatments t ON a.appointment_id = t.appointment_id\nLEFT JOIN billing b ON t.treatment_id = b.treatment_id\nWHERE a.appointment_date >= '2023-11-01' AND a.appointment_date < '2023-12-01'\n  AND b.bill_id IS NOT NULL\nORDER BY a.appointment_date;",
+      "generated_kind": "sql",
+      "seconds": 33.33,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "x02",
+      "config": "examples_only",
+      "verdict": "match_extra_columns",
+      "detail": "reference rows reproduced by model columns [appointment_id, invoice_amount]; model returned 3 columns",
+      "sql": "SELECT a.appointment_id, a.appointment_date, b.amount AS invoice_amount\nFROM appointments AS a\nJOIN treatments AS t ON t.appointment_id = a.appointment_id\nJOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE b.bill_date >= '2023-11-01'\n  AND b.bill_date < '2023-12-01'\nORDER BY a.appointment_id, b.bill_id;",
+      "generated_kind": "sql",
+      "seconds": 39.22,
+      "context_ids": [
+        "example:248",
+        "example:249",
+        "example:204",
+        "example:203",
+        "example:177"
+      ]
+    },
+    {
+      "id": "x02",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3758 tokens (estimated, 9233 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:248",
+        "example:249",
+        "example:204",
+        "example:203",
+        "example:177"
+      ]
+    },
+    {
+      "id": "x02",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3782 tokens (estimated, 9294 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:248",
+        "example:249",
+        "example:204",
+        "example:203",
+        "example:177"
+      ]
+    },
+    {
+      "id": "n08",
+      "config": "schema_only",
+      "verdict": "rejected",
+      "detail": "unknown_alias",
+      "sql": "SELECT SUM(b.amount) AS total_billed\nFROM appointments\nJOIN treatments ON appointments.appointment_id = treatments.appointment_id\nJOIN billing ON treatments.treatment_id = billing.treatment_id\nJOIN doctors ON appointments.doctor_id = doctors.doctor_id\nWHERE appointments.status = 'Completed'\nGROUP BY doctors.hospital_branch;",
+      "generated_kind": "sql",
+      "seconds": 23.7,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "n08",
+      "config": "examples_only",
+      "verdict": "rejected",
+      "detail": "unknown_column",
+      "sql": "SELECT d.hospital_branch, SUM(b.amount) AS total_billed\nFROM billing AS b\nJOIN treatments AS t ON b.treatment_id = t.treatment_id\nJOIN appointments AS a ON t.appointment_id = a.appointment_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nWHERE a.appointment_status = 'Completed'\nGROUP BY d.hospital_branch\nORDER BY d.hospital_branch;",
+      "generated_kind": "sql",
+      "seconds": 35.04,
+      "context_ids": [
+        "example:200",
+        "example:217",
+        "example:232",
+        "example:205",
+        "example:225"
+      ]
+    },
+    {
+      "id": "n08",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3738 tokens (estimated, 9185 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:200",
+        "example:217",
+        "example:232",
+        "example:205",
+        "example:225"
+      ]
+    },
+    {
+      "id": "n08",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3763 tokens (estimated, 9246 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:200",
+        "example:217",
+        "example:232",
+        "example:205",
+        "example:225"
+      ]
+    },
+    {
+      "id": "n09",
+      "config": "schema_only",
+      "verdict": "mismatch",
+      "detail": "model 3 row(s) x 2 col(s) vs reference 3 x 2",
+      "sql": "SELECT payment_method, COUNT(DISTINCT patient_id) AS patient_count\nFROM billing\nWHERE bill_date >= '2023-07-01' AND bill_date < '2023-12-01'\nGROUP BY payment_method\nORDER BY patient_count DESC;",
+      "generated_kind": "sql",
+      "seconds": 23.47,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "n09",
+      "config": "examples_only",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT payment_method, COUNT(DISTINCT patient_id) AS patient_count\nFROM billing\nWHERE bill_date >= '2023-07-01'\n  AND bill_date < '2024-01-01'\nGROUP BY payment_method\nORDER BY patient_count DESC, payment_method;",
+      "generated_kind": "sql",
+      "seconds": 29.91,
+      "context_ids": [
+        "example:210",
+        "example:101",
+        "example:173",
+        "example:124",
+        "example:168"
+      ]
+    },
+    {
+      "id": "n09",
+      "config": "schema_plus_examples",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT payment_method, COUNT(DISTINCT patient_id) AS patient_count\nFROM billing\nWHERE bill_date >= '2023-07-01'\n  AND bill_date < '2024-01-01'\nGROUP BY payment_method\nORDER BY payment_method;",
+      "generated_kind": "sql",
+      "seconds": 43.22,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:210",
+        "example:101",
+        "example:173",
+        "example:124",
+        "example:168"
+      ]
+    },
+    {
+      "id": "n09",
+      "config": "production",
+      "verdict": "match",
+      "detail": "same rows (order ignored)",
+      "sql": "SELECT payment_method, COUNT(DISTINCT patient_id) AS patient_count\nFROM billing\nWHERE bill_date >= '2023-07-01'\n  AND bill_date < '2024-01-01'\nGROUP BY payment_method\nORDER BY payment_method;",
+      "generated_kind": "sql",
+      "seconds": 44.28,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:210",
+        "example:101",
+        "example:173",
+        "example:124",
+        "example:168"
+      ]
+    },
+    {
+      "id": "n10",
+      "config": "schema_only",
+      "verdict": "mismatch",
+      "detail": "model 0 row(s) x 3 col(s) vs reference 2 x 2",
+      "sql": "SELECT a.appointment_id, CONCAT(p.first_name, ' ', p.last_name) AS patient_name, b.amount AS invoice_amount\nFROM appointments a\nJOIN patients p ON a.patient_id = p.patient_id\nJOIN treatments t ON a.appointment_id = t.appointment_id\nJOIN billing b ON t.treatment_id = b.treatment_id\nWHERE a.doctor_id = 'dr_sarah_smith'\n  AND a.appointment_date >= '2023-06-01'\n  AND a.appointment_date < '2023-07-01';",
+      "generated_kind": "sql",
+      "seconds": 45.15,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing"
+      ]
+    },
+    {
+      "id": "n10",
+      "config": "examples_only",
+      "verdict": "rejected",
+      "detail": "unknown_column",
+      "sql": "SELECT a.appointment_id, a.appointment_date,\n       CONCAT(p.first_name, ' ', p.last_name) AS patient_name,\n       b.amount AS invoice_amount\nFROM appointments AS a\nJOIN patients AS p ON a.patient_id = p.patient_id\nJOIN doctors AS d ON a.doctor_id = d.doctor_id\nLEFT JOIN treatments AS t ON t.appointment_id = a.appointment_id\nLEFT JOIN billing AS b ON b.treatment_id = t.treatment_id\nWHERE d.doctor_name = 'Sarah Smith'\n  AND a.appointment_date >= '2023-06-01'\n  AND a.appointment_date < '2023-07-01'\nORDER BY a.appointment_id, b.bill_id;",
+      "generated_kind": "sql",
+      "seconds": 51.37,
+      "context_ids": [
+        "example:203",
+        "example:204",
+        "example:249",
+        "example:144",
+        "example:248"
+      ]
+    },
+    {
+      "id": "n10",
+      "config": "schema_plus_examples",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3860 tokens (estimated, 9490 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:203",
+        "example:204",
+        "example:249",
+        "example:144",
+        "example:248"
+      ]
+    },
+    {
+      "id": "n10",
+      "config": "production",
+      "verdict": "no_result",
+      "detail": "ContextBudgetError: Prompt is about 3885 tokens (estimated, 9551 characters); with 512 output tokens it exceeds num_ctx=4096. Nothing was sent. Increase OLLAMA_SQL_NUM_CTX or lower RAG_CONTEXT_TOP_K; schema and context a",
+      "sql": null,
+      "seconds": 0.0,
+      "context_ids": [
+        "schema:patients",
+        "schema:doctors",
+        "schema:appointments",
+        "schema:treatments",
+        "schema:billing",
+        "example:203",
+        "example:204",
+        "example:249",
+        "example:144",
+        "example:248"
+      ]
+    }
+  ],
+  "summary": {
+    "schema_only": {
+      "correct": 21,
+      "total": 31,
+      "accuracy": 0.677,
+      "rejected": 2,
+      "no_result": 0,
+      "median_seconds": 28.81
+    },
+    "examples_only": {
+      "correct": 21,
+      "total": 31,
+      "accuracy": 0.677,
+      "rejected": 3,
+      "no_result": 0,
+      "median_seconds": 29.91
+    },
+    "schema_plus_examples": {
+      "correct": 17,
+      "total": 31,
+      "accuracy": 0.548,
+      "rejected": 1,
+      "no_result": 9,
+      "median_seconds": 36.66
+    },
+    "production": {
+      "correct": 17,
+      "total": 31,
+      "accuracy": 0.548,
+      "rejected": 1,
+      "no_result": 10,
+      "median_seconds": 28.97
+    }
+  }
+}
