@@ -61,6 +61,16 @@ python -m evaluation.run_dev_eval
 - Run with the API stopped: `python -m evaluation.run_quality_eval --label <name> [--split dev|heldout|all]`.
 - Results and the manual SQL review: `docs/answer_quality.md`.
 
+## Retrieval benefit (rq2-v1)
+
+- `run_rq2_eval.py`: RQ2, does retrieved context help the model write correct SQL? Runs the same questions through
+  the SQL generation step alone with four inputs: `schema_only`, `examples_only`, `schema_plus_examples` and
+  `production`. No intent routing, semantic guards or correction, so only the context changes.
+- Questions: single-turn data questions from the sets above with a reference query on the real data, excluding
+  fixture scenarios and those that overlap the knowledge-base examples (31 today).
+- Run with the API stopped: `python -m evaluation.run_rq2_eval [--configs ...] [--top-k N]`; `--dry-run` lists the
+  questions without Ollama or MySQL.
+
 **تحذير:** تطابق النتائج على هذه البيانات الصغيرة لا يثبت أن الاستعلام صحيح.
 - في dev-v1، لا تستطيع البيانات التفريق بين الاستعلام الصحيح والخاطئ في 3 من 5 أسئلة:
   - dev-01: لا يوجد طبيب بصفر مواعيد مكتملة، فوضع الفلتر في WHERE يعطي النتيجة نفسها.
